@@ -24,6 +24,21 @@
 		8B955F2818E24E3000C85C45 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B955F0318E24E3000C85C45 /* UIKit.framework */; };
 		8B955F3018E24E3000C85C45 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F2E18E24E3000C85C45 /* InfoPlist.strings */; };
 		8B955F3218E24E3000C85C45 /* CCiOSMidtermTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F3118E24E3000C85C45 /* CCiOSMidtermTests.m */; };
+		8B955F4718E2798C00C85C45 /* SKAction+SKTExtras.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F3E18E2798C00C85C45 /* SKAction+SKTExtras.m */; };
+		8B955F4818E2798C00C85C45 /* SKEmitterNode+SKTExtras.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F4018E2798C00C85C45 /* SKEmitterNode+SKTExtras.m */; };
+		8B955F4918E2798C00C85C45 /* SKNode+SKTExtras.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F4218E2798C00C85C45 /* SKNode+SKTExtras.m */; };
+		8B955F4A18E2798C00C85C45 /* SKTAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F4418E2798C00C85C45 /* SKTAudio.m */; };
+		8B955F4B18E2798C00C85C45 /* SKTUtils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8B955F4618E2798C00C85C45 /* SKTUtils.mm */; };
+		8B955F5918E79BFA00C85C45 /* alienPlanet.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5018E79BFA00C85C45 /* alienPlanet.png */; };
+		8B955F5A18E79BFA00C85C45 /* alienPlanet2.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5118E79BFA00C85C45 /* alienPlanet2.png */; };
+		8B955F5B18E79BFA00C85C45 /* asteroid.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5218E79BFA00C85C45 /* asteroid.png */; };
+		8B955F5C18E79BFA00C85C45 /* blueSun.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5318E79BFA00C85C45 /* blueSun.png */; };
+		8B955F5D18E79BFA00C85C45 /* earth.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5418E79BFA00C85C45 /* earth.png */; };
+		8B955F5E18E79BFA00C85C45 /* earthBase.psd in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5518E79BFA00C85C45 /* earthBase.psd */; };
+		8B955F5F18E79BFA00C85C45 /* greenPlanet.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5618E79BFA00C85C45 /* greenPlanet.png */; };
+		8B955F6018E79BFA00C85C45 /* moon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5718E79BFA00C85C45 /* moon.png */; };
+		8B955F6118E79BFA00C85C45 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5818E79BFA00C85C45 /* sun.png */; };
+		8B955F6318E7A28900C85C45 /* vignette.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F6218E7A28900C85C45 /* vignette.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +75,27 @@
 		8B955F2D18E24E3000C85C45 /* CCiOSMidtermTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "CCiOSMidtermTests-Info.plist"; sourceTree = "<group>"; };
 		8B955F2F18E24E3000C85C45 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		8B955F3118E24E3000C85C45 /* CCiOSMidtermTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CCiOSMidtermTests.m; sourceTree = "<group>"; };
+		8B955F3B18E253EE00C85C45 /* Physics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Physics.h; sourceTree = "<group>"; };
+		8B955F3D18E2798C00C85C45 /* SKAction+SKTExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SKAction+SKTExtras.h"; sourceTree = "<group>"; };
+		8B955F3E18E2798C00C85C45 /* SKAction+SKTExtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SKAction+SKTExtras.m"; sourceTree = "<group>"; };
+		8B955F3F18E2798C00C85C45 /* SKEmitterNode+SKTExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SKEmitterNode+SKTExtras.h"; sourceTree = "<group>"; };
+		8B955F4018E2798C00C85C45 /* SKEmitterNode+SKTExtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SKEmitterNode+SKTExtras.m"; sourceTree = "<group>"; };
+		8B955F4118E2798C00C85C45 /* SKNode+SKTExtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "SKNode+SKTExtras.h"; sourceTree = "<group>"; };
+		8B955F4218E2798C00C85C45 /* SKNode+SKTExtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "SKNode+SKTExtras.m"; sourceTree = "<group>"; };
+		8B955F4318E2798C00C85C45 /* SKTAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SKTAudio.h; sourceTree = "<group>"; };
+		8B955F4418E2798C00C85C45 /* SKTAudio.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SKTAudio.m; sourceTree = "<group>"; };
+		8B955F4518E2798C00C85C45 /* SKTUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SKTUtils.h; sourceTree = "<group>"; };
+		8B955F4618E2798C00C85C45 /* SKTUtils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SKTUtils.mm; sourceTree = "<group>"; };
+		8B955F5018E79BFA00C85C45 /* alienPlanet.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = alienPlanet.png; sourceTree = "<group>"; };
+		8B955F5118E79BFA00C85C45 /* alienPlanet2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = alienPlanet2.png; sourceTree = "<group>"; };
+		8B955F5218E79BFA00C85C45 /* asteroid.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = asteroid.png; sourceTree = "<group>"; };
+		8B955F5318E79BFA00C85C45 /* blueSun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = blueSun.png; sourceTree = "<group>"; };
+		8B955F5418E79BFA00C85C45 /* earth.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = earth.png; sourceTree = "<group>"; };
+		8B955F5518E79BFA00C85C45 /* earthBase.psd */ = {isa = PBXFileReference; lastKnownFileType = file; path = earthBase.psd; sourceTree = "<group>"; };
+		8B955F5618E79BFA00C85C45 /* greenPlanet.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = greenPlanet.png; sourceTree = "<group>"; };
+		8B955F5718E79BFA00C85C45 /* moon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = moon.png; sourceTree = "<group>"; };
+		8B955F5818E79BFA00C85C45 /* sun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sun.png; sourceTree = "<group>"; };
+		8B955F6218E7A28900C85C45 /* vignette.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vignette.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -121,6 +157,8 @@
 		8B955F0718E24E3000C85C45 /* CCiOSMidterm */ = {
 			isa = PBXGroup;
 			children = (
+				8B955F4F18E79BFA00C85C45 /* Art */,
+				8B955F3C18E2798C00C85C45 /* SKTUtils */,
 				8B955F1018E24E3000C85C45 /* BMAAppDelegate.h */,
 				8B955F1118E24E3000C85C45 /* BMAAppDelegate.m */,
 				8B955F1318E24E3000C85C45 /* Main.storyboard */,
@@ -128,6 +166,7 @@
 				8B955F1718E24E3000C85C45 /* BMAViewController.m */,
 				8B955F1918E24E3000C85C45 /* BMAMyScene.h */,
 				8B955F1A18E24E3000C85C45 /* BMAMyScene.m */,
+				8B955F3B18E253EE00C85C45 /* Physics.h */,
 				8B955F1C18E24E3000C85C45 /* Spaceship.png */,
 				8B955F1E18E24E3000C85C45 /* Images.xcassets */,
 				8B955F0818E24E3000C85C45 /* Supporting Files */,
@@ -162,6 +201,40 @@
 				8B955F2E18E24E3000C85C45 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		8B955F3C18E2798C00C85C45 /* SKTUtils */ = {
+			isa = PBXGroup;
+			children = (
+				8B955F3D18E2798C00C85C45 /* SKAction+SKTExtras.h */,
+				8B955F3E18E2798C00C85C45 /* SKAction+SKTExtras.m */,
+				8B955F3F18E2798C00C85C45 /* SKEmitterNode+SKTExtras.h */,
+				8B955F4018E2798C00C85C45 /* SKEmitterNode+SKTExtras.m */,
+				8B955F4118E2798C00C85C45 /* SKNode+SKTExtras.h */,
+				8B955F4218E2798C00C85C45 /* SKNode+SKTExtras.m */,
+				8B955F4318E2798C00C85C45 /* SKTAudio.h */,
+				8B955F4418E2798C00C85C45 /* SKTAudio.m */,
+				8B955F4518E2798C00C85C45 /* SKTUtils.h */,
+				8B955F4618E2798C00C85C45 /* SKTUtils.mm */,
+			);
+			path = SKTUtils;
+			sourceTree = "<group>";
+		};
+		8B955F4F18E79BFA00C85C45 /* Art */ = {
+			isa = PBXGroup;
+			children = (
+				8B955F6218E7A28900C85C45 /* vignette.png */,
+				8B955F5018E79BFA00C85C45 /* alienPlanet.png */,
+				8B955F5118E79BFA00C85C45 /* alienPlanet2.png */,
+				8B955F5218E79BFA00C85C45 /* asteroid.png */,
+				8B955F5318E79BFA00C85C45 /* blueSun.png */,
+				8B955F5418E79BFA00C85C45 /* earth.png */,
+				8B955F5518E79BFA00C85C45 /* earthBase.psd */,
+				8B955F5618E79BFA00C85C45 /* greenPlanet.png */,
+				8B955F5718E79BFA00C85C45 /* moon.png */,
+				8B955F5818E79BFA00C85C45 /* sun.png */,
+			);
+			path = Art;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -241,8 +314,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B955F6018E79BFA00C85C45 /* moon.png in Resources */,
+				8B955F5A18E79BFA00C85C45 /* alienPlanet2.png in Resources */,
 				8B955F0C18E24E3000C85C45 /* InfoPlist.strings in Resources */,
+				8B955F5B18E79BFA00C85C45 /* asteroid.png in Resources */,
+				8B955F5F18E79BFA00C85C45 /* greenPlanet.png in Resources */,
+				8B955F6318E7A28900C85C45 /* vignette.png in Resources */,
+				8B955F5918E79BFA00C85C45 /* alienPlanet.png in Resources */,
+				8B955F5E18E79BFA00C85C45 /* earthBase.psd in Resources */,
+				8B955F6118E79BFA00C85C45 /* sun.png in Resources */,
 				8B955F1F18E24E3000C85C45 /* Images.xcassets in Resources */,
+				8B955F5D18E79BFA00C85C45 /* earth.png in Resources */,
+				8B955F5C18E79BFA00C85C45 /* blueSun.png in Resources */,
 				8B955F1D18E24E3000C85C45 /* Spaceship.png in Resources */,
 				8B955F1518E24E3000C85C45 /* Main.storyboard in Resources */,
 			);
@@ -264,8 +347,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				8B955F0E18E24E3000C85C45 /* main.m in Sources */,
+				8B955F4A18E2798C00C85C45 /* SKTAudio.m in Sources */,
 				8B955F1818E24E3000C85C45 /* BMAViewController.m in Sources */,
+				8B955F4818E2798C00C85C45 /* SKEmitterNode+SKTExtras.m in Sources */,
+				8B955F4B18E2798C00C85C45 /* SKTUtils.mm in Sources */,
+				8B955F4718E2798C00C85C45 /* SKAction+SKTExtras.m in Sources */,
 				8B955F1218E24E3000C85C45 /* BMAAppDelegate.m in Sources */,
+				8B955F4918E2798C00C85C45 /* SKNode+SKTExtras.m in Sources */,
 				8B955F1B18E24E3000C85C45 /* BMAMyScene.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
