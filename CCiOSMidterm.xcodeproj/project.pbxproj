@@ -561,6 +561,7 @@
 				8B955F3718E24E3000C85C45 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		8B955F3818E24E3000C85C45 /* Build configuration list for PBXNativeTarget "CCiOSMidtermTests" */ = {
 			isa = XCConfigurationList;
@@ -569,6 +570,7 @@
 				8B955F3A18E24E3000C85C45 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
