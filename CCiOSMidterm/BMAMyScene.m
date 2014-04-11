@@ -53,7 +53,9 @@
     CGVector _velocity;
     
     NSMutableArray *_blackHoleLoc;
+    NSMutableArray *_newBlackHoleLoc;
     //NSMutableArray *_planetPopus;
+    //NSMutableArray *_colonyPlanets;
 }
 
 
@@ -76,7 +78,9 @@
     self.physicsWorld.contactDelegate = self;
     
     _blackHoleLoc = [[NSMutableArray alloc] init];  //for storing locations of black holes
+    _newBlackHoleLoc = [[NSMutableArray alloc]init];  //for updating black hole loc positions
     //_planetPopus = [[NSMutableArray alloc] init];   //for storing planet populations
+    //_colonyPlanets = [[NSMutableArray alloc] init];  //for storing all the colony planets brought into the scene
     
     [self addShipAtPosition:CGPointMake(self.size.width/2,self.size.height/2-100)]; //adds ship at center
     [self addAsteroidAtPosition:CGPointMake(100, 100) withSize:CGSizeMake(16, 16)];
@@ -126,7 +130,7 @@
     _shipNode.physicsBody.contactTestBitMask = PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole;
     
     if (_shipNode.userData==nil) {
-        _shipNode.userData = [@{@"population":@(100)} mutableCopy];
+        _shipNode.userData = [@{@"population":@(16*10)} mutableCopy];
     }
     //NSLog(@"population = %@", [_shipNode.userData valueForKey:@"population"]);
     NSLog(@"earth population (by starting userData)= %i", [_shipNode.userData[@"population"] intValue]);
@@ -158,7 +162,7 @@
     _colonyPlanetNode.physicsBody.categoryBitMask = PhysicsCategoryColony;
     _colonyPlanetNode.physicsBody.contactTestBitMask = PhysicsCategoryShip | PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole;
     if (_colonyPlanetNode.userData==nil) {
-        _colonyPlanetNode.userData = [@{@"population":@(0)} mutableCopy];
+        _colonyPlanetNode.userData = [@{@"population":@(size.width*10)} mutableCopy];
     }
     //NSLog(@"population = %@", [_shipNode.userData valueForKey:@"population"]);
     NSLog(@"colony population = %i", [_colonyPlanetNode.userData[@"population"] intValue]);
@@ -171,9 +175,10 @@
     
     //[_shipNode.userData valueForKey:@"population"];
     //[NSString stringWithFormat:@"fuel %i", _fuel];
-    
-//    [_planetPopus addObject:[NSNumber numberWithInt:[ _colonyPlanetNode.userData[@"population"] intValue]]];
-//    NSLog(@"planet population array objects: %@", _planetPopus);
+    //[_colonyPlanets addObject:_colonyPlanetNode];
+    //[_planetPopus addObject:[NSNumber numberWithInt:[ _colonyPlanetNode.userData[@"population"] intValue]]];
+    //NSLog(@"planet population array objects: %@", _planetPopus);
+    //NSLog(@"how many colony planets? %@", _colonyPlanets);
 }
 
 - (void) addAsteroidAtPosition:(CGPoint)pos withSize:(CGSize)size
@@ -209,7 +214,6 @@
     //CERTAIN KINDS OF SUNS GROW WHEN THEY SWALLOW MASS? THEY CAN BECOME A BLACK HOLE OR EXPLODE?
     //will need to have a 'resting state?' or natural lifecycle?
 }
-
 
 - (void) addBlueSunAtPosition:(CGPoint)pos withSize:(CGSize)size
 {
@@ -257,16 +261,44 @@
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *) event
 {
     //if (_swipeCounter < 10) {
-        _swipeCounter++;
-        _fuel -= 1;
+    _swipeCounter++;
+    _fuel -= 1;
+    //NSLog(@"%i", _swipeCounter);
     
     if ( [_shipNode.userData[@"population"] intValue] > 0 ) {
         int newPop = [_shipNode.userData[@"population"] intValue];
         newPop -= 1;
-        NSLog(@"population = %i", [_shipNode.userData[@"population"] intValue]);
+        //NSLog(@"earth population = %i", [_shipNode.userData[@"population"] intValue]);
         _shipNode.userData = [@{@"population":@(newPop)} mutableCopy];
     }
-        //NSLog(@"%i", _swipeCounter);
+    
+    //NSMutableArray *colonyPopulations = [[NSMutableArray alloc] init];
+    //colonyPopulations = _planetPopus;
+    //for (int i = 0; i < colonyPopulations.count; i++) {
+    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        if ([node.userData[@"population"] intValue] > 0 ) {
+            int newPop = [node.userData[@"population"] intValue];
+            newPop -= 1;
+            NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
+            node.userData = [@{@"population":@(newPop)} mutableCopy];
+        }
+    }];
+    //}
+    
+//    [_gameNode enumerateChildNodesWithName:@"colonyPlanet" usingBlock:^(SKNode *node, BOOL *stop) {
+        //[colonyPopulations addObject:[NSNumber numberWithInt:[ _colonyPlanetNode.userData[@"population"] intValue]]];
+        
+//    }];
+    //NSLog(@"colony population array objects: %@", colonyPopulations);
+//    for (int i = 0; i < _planetPopus.count; i++) {//colonyPopulations.count; i++) {
+//        if ([[_planetPopus objectAtIndex:i] intValue]> 0) {
+//            if ([colonyPopulations objectAtIndex:i] ) {
+//                [_planetPopus replaceObjectAtIndex:i withObject:[NSNumber numberWithInt:[[colonyPopulations objectAtIndex:i] intValue]-1]];
+//            }
+//        }
+//    }
+    //NSLog(@"adjusted colony popus: %@", _planetPopus);
+    
     for (UITouch *touch in touches) {
         CGPoint location = [touch locationInNode:self];
         _releaseLocation = location;
@@ -288,18 +320,17 @@
             // get their userData and store it to an new array
             // subtract -1 from each in the array (just like with newPop)
             // using for loop, write it back to their userData
+        
+        
+        //[ _colonyPlanetNode.userData[@"population"] intValue]]
     }
 }
 
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
-    NSLog(@"array objects: %@", _blackHoleLoc);
+    //NSLog(@"array objects: %@", _blackHoleLoc);
 }
 
--(void)updateBlackHolePositions:(SKNode*)node atIndex:(int)index
-{
-    [_blackHoleLoc replaceObjectAtIndex:index withObject:[NSValue valueWithCGPoint:node.position]];
-}
 
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
@@ -307,14 +338,12 @@
     _fuelUI.text = [NSString stringWithFormat:@"fuel %i", _fuel];
     
     //get all blackhole positions to use for forces
-    //IS IT BAD THAT I'M INITIALIZING A NEW ARRAY EVERY FRAME??
-    NSMutableArray *newBlackHoleLoc;
-    newBlackHoleLoc = [[NSMutableArray alloc]init];
+    _newBlackHoleLoc = [[NSMutableArray alloc]init];
     [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
-        [newBlackHoleLoc addObject: [NSValue valueWithCGPoint:node.position]];
+        [_newBlackHoleLoc addObject: [NSValue valueWithCGPoint:node.position]];
     }];
      //NSLog(@"array objects: %@", newArray);
-    _blackHoleLoc = newBlackHoleLoc;
+    _blackHoleLoc = _newBlackHoleLoc;
     
     NSMutableArray *blackHoleSize;
     blackHoleSize = [[NSMutableArray alloc]init];
@@ -336,8 +365,6 @@
             }
         }
     }
-
-
 }
 
 - (void)didSimulatePhysics
@@ -386,6 +413,7 @@
     {
         contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
         NSLog(@"New colony");
+        contact.bodyB.node.name = @"controlColony";
     }
     
     //Colony turning into control colony
