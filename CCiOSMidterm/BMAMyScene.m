@@ -39,7 +39,7 @@
     SKLabelNode *_fuelUI;
     
     int _currentLevel;
-    int _fuel;
+    //int _fuel;
     int _swipeCounter;
     float _newX;
     float _newY;
@@ -117,17 +117,17 @@
     _shipNode.physicsBody.linearDamping = 0.9;
     _shipNode.physicsBody.angularDamping = 0.9;
     _shipNode.physicsBody.categoryBitMask = PhysicsCategoryShip;
-    _shipNode.physicsBody.contactTestBitMask = PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole;
+    _shipNode.physicsBody.contactTestBitMask = PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole | PhysicsCategoryAsteroid;
     
     _shipNode.userData = [[NSMutableDictionary alloc] init];
-    
     [_shipNode.userData setObject:[NSNumber numberWithInt:160] forKey:@"maxPopulation"];
     [_shipNode.userData setObject:[NSNumber numberWithInt:80] forKey:@"population"];
+    [_shipNode.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+    [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
 
     //NSLog(@"population = %@", [_shipNode.userData valueForKey:@"population"]);
     //NSLog(@"earth population (by starting userData)= %i", [_shipNode.userData[@"population"] intValue]);
     
-    //SKLabelNode *popUI;
     _earthPopulationLabel = [SKLabelNode labelNodeWithFontNamed:@"AvenirNext-Regular"];
     _earthPopulationLabel.verticalAlignmentMode = SKLabelVerticalAlignmentModeCenter;
     _earthPopulationLabel.fontSize = 10.0;
@@ -137,7 +137,6 @@
 
     //NSLog(@"earth population = %i", [_shipNode.userData[@"population"] intValue]);
     //NSLog(@"earth max population = %@", [_shipNode.userData valueForKey:@"maxPopulation"]);
-    
 }
 
 - (void) addColonyPlanetAtPosition:(CGPoint)pos withSize:(CGSize)size
@@ -153,11 +152,13 @@
     _colonyPlanetNode.physicsBody.linearDamping = 0.9;
     _colonyPlanetNode.physicsBody.angularDamping = 0.9;
     _colonyPlanetNode.physicsBody.categoryBitMask = PhysicsCategoryColony;
-    _colonyPlanetNode.physicsBody.contactTestBitMask = PhysicsCategoryShip | PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole;
+    _colonyPlanetNode.physicsBody.contactTestBitMask = PhysicsCategoryShip | PhysicsCategorySun | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole | PhysicsCategoryAsteroid;
 
     _colonyPlanetNode.userData = [[NSMutableDictionary alloc] init];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:size.width*10] forKey:@"maxPopulation"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+    [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+    [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
     
     //NSLog(@"colony population = %i", [_colonyPlanetNode.userData[@"population"] intValue]);
     //NSLog(@"colony max population = %@", [_colonyPlanetNode.userData valueForKey:@"maxPopulation"]);
@@ -220,7 +221,8 @@
     _blueSunNode.physicsBody.dynamic = NO;
 }
 
-- (void) addBlackHoleAtPosition:(CGPoint)pos withSize:(CGSize)size{
+- (void) addBlackHoleAtPosition:(CGPoint)pos withSize:(CGSize)size
+{
     _blackHoleNode = [SKSpriteNode spriteNodeWithImageNamed:@"alienPlanet"];
     _blackHoleNode.name = @"blackHole";
     _blackHoleNode.position = pos;
@@ -235,7 +237,8 @@
     [_blackHoleLoc addObject:[NSValue valueWithCGPoint:pos]];
 }
 
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
     /* Called when a touch begins */
     for (UITouch *touch in touches) {
         CGPoint location = [touch locationInNode:self];
@@ -245,12 +248,11 @@
     }
 }
 
-
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *) event
 {
     //if (_swipeCounter < 10) {
     _swipeCounter++;
-    _fuel -= 1;
+    //_fuel -= 1;
     //NSLog(@"%i", _swipeCounter);
     
     for (UITouch *touch in touches) {
@@ -259,26 +261,33 @@
         _newX = (_releaseLocation.x - _touchLocation.x) * 0.04;//(_swipeCounter * 0.0001);
         _newY = (_releaseLocation.y - _touchLocation.y) * 0.04;//(_swipeCounter * 0.0001);
         
-        if ( [_shipNode.userData[@"population"] intValue] > 0 ) {
-            [_shipNode.physicsBody applyForce: CGVectorMake(_newX, _newY)];
-            int newPop = [_shipNode.userData[@"population"] intValue];
-            newPop -= 5;
-            [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
-        }
-        //for (SKSpriteNode *node in _gameNode.children) {
-        
-        [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
-            //if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
-            if ([node.userData[@"population"] intValue] > 0 ) {
-                [node.physicsBody applyForce: CGVectorMake(_newX, _newY)];
-                int newPop = [node.userData[@"population"] intValue];
-                newPop -= 5;
-                //NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
-                //node.userData = [@{@"population":@(newPop)} mutableCopy];
-                [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+        if ( [_shipNode.userData[@"canControl"] boolValue] == YES ) {
+            if ( [_shipNode.userData[@"population"] intValue] > 0 ) {
+                [_shipNode.physicsBody applyForce: CGVectorMake(_newX, _newY)];
+                int newPop = [_shipNode.userData[@"population"] intValue];
+                newPop -= 4;//change based on speed?
+                [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+            } else {
+                [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             }
-   //         }
-//        }
+        }
+
+        [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+            if ( [node.userData[@"canControl"] boolValue] == YES ) {
+                if ([node.userData[@"population"] intValue] > 0 ) {
+                    [node.physicsBody applyForce: CGVectorMake(_newX, _newY)];
+                    int newPop = [node.userData[@"population"] intValue];
+                    newPop -= 4;
+                    //NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
+                    //node.userData = [@{@"population":@(newPop)} mutableCopy];
+                    [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                } else {
+                    [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+                    //int newPop = [node.userData[@"population"] intValue];
+                    //newPop = -20;
+                    //[node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                }
+            }
          }];
     }
 }
@@ -288,8 +297,8 @@
     //NSLog(@"array objects: %@", _blackHoleLoc);
 }
 
-
--(void)update:(CFTimeInterval)currentTime {
+-(void)update:(CFTimeInterval)currentTime
+{
     
     /* Called before each frame is rendered */
     
@@ -300,7 +309,7 @@
     [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
         [_newBlackHoleLoc addObject: [NSValue valueWithCGPoint:node.position]];
     }];
-     //NSLog(@"array objects: %@", newArray);
+    //NSLog(@"array objects: %@", newArray);
     _blackHoleLoc = _newBlackHoleLoc;
     
     [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
@@ -322,29 +331,61 @@
         }
     }
     
-    if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] ) {
-        int newPop = [_shipNode.userData[@"population"] intValue];
-        newPop += 1;
-        [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+    if ( [_shipNode.userData[@"canControl"] boolValue] == YES ) {
+        if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] ) {
+            int newPop = [_shipNode.userData[@"population"] intValue];
+            newPop += 1;
+            [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+        }
+    } else { //if ( [_shipNode.userData[@"canControl"] boolValue] == NO ) {
+        if ( [_shipNode.userData[@"controlReturnCount"] intValue] > 0 ) {
+            int newCount = [_shipNode.userData[@"controlReturnCount"] intValue];
+            newCount --;
+            //NSLog(@"control return count = %i", [_shipNode.userData[@"controlReturnCount"] intValue]);
+            [_shipNode.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
+        } else {
+            [_shipNode.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+            [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
+            //NSLog(@"control returned");
+        }
     }
     
     [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
-        if ([node.userData[@"population"] intValue] < [node.userData[@"maxPopulation"] intValue] ) {
-            int newPop = [node.userData[@"population"] intValue];
-            newPop += 1;
-            [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
-            
+        if ( [node.userData[@"canControl"] boolValue] == YES) {
+            if (([node.userData[@"population"] intValue] < [node.userData[@"maxPopulation"] intValue] )     ) {  //comment these two out if below
+                //   && ([node.userData[@"population"] intValue] >= 0 )){  //for testing no regeneration if below 0?  //SEE BELOW RE. NEW TYPE
+                int newPop = [node.userData[@"population"] intValue];
+                newPop += 1;
+                [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+            }
+        } else { //if ( [node.userData[@"canControl"] boolValue] == NO ) {
+            if ( [node.userData[@"controlReturnCount"] intValue] > 0 ) {
+                int newCount = [node.userData[@"controlReturnCount"] intValue];
+                newCount --;
+                //NSLog(@"control return count = %i", [node.userData[@"controlReturnCount"] intValue]);
+                [node.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
+            } else {
+                [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+                [node.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
+                //NSLog(@"colony planet control returned");
+            }
         }
+        
+        
+        //if ([node.userData[@"population"] intValue] < 0) {    //MAYBE KEEP THE NO-REGEN THING FOR ANOTHER TYPE OF COLONY.
+        //    node.name = @"colonyPlanet";
+        //    node.physicsBody.categoryBitMask = PhysicsCategoryColony;
+            //[node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+        //}
     }];
     
     //NSLog(@"earth population = %i", [_shipNode.userData[@"population"] intValue]);
     //NSLog(@"earth max population = %i", [_shipNode.userData[@"maxPopulation"] intValue]);
-    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
-        NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
-        NSLog(@"colony max population = %i", [node.userData[@"maxPopulation"] intValue]);
-        
-    }];
-    
+    //[_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        //NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
+        //NSLog(@"colony max population = %i", [node.userData[@"maxPopulation"] intValue]);
+    //}];
+
     _earthPopulationLabel.text = [NSString stringWithFormat:@"%i", [_shipNode.userData[@"population"] intValue] ];
     for (int i = 0; i < [_populationLabels count]; i++) {
         SKLabelNode * label = _populationLabels[i];     //KILL THESE NEW INITIALIZATIONS WITH A PRIVATE VAR?
@@ -356,9 +397,9 @@
 
 - (void)didSimulatePhysics
 {
-    _newX = 0;
-    _newY = 0;
-    _velocity = _shipNode.physicsBody.velocity;
+    //_newX = 0;
+    //_newY = 0;
+    //_velocity = _shipNode.physicsBody.velocity;
 }
 
 - (void)didBeginContact:(SKPhysicsContact *) contact
@@ -366,10 +407,10 @@
     uint32_t collision = (contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask);
     
     if (collision == (PhysicsCategoryShip | PhysicsCategorySun) ) {
-        NSLog(@"DEAAATHHHH");
+        NSLog(@"earth destruction");
         [contact.bodyA.node removeFromParent];
         
-        NSLog(@"grow time!");
+        NSLog(@"sun grows");
         //ENTER MYSTERY CODE HERE! contact.bodyB.node.size is no good.
         //[contact.bodyB.node setScale:2.0];
         CGFloat absorbMass = contact.bodyA.node.frame.size.width * 0.01; //THIS SORT OF WORKS BUT I WANTED MASS
@@ -401,6 +442,30 @@
         contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
         NSLog(@"New colony");
         contact.bodyB.node.name = @"controlColony";
+        int earthNewPop = [_shipNode.userData[@"population"] intValue];
+        earthNewPop -= 20;
+        [_shipNode.userData setObject:[NSNumber numberWithInt:earthNewPop] forKey:@"population"];
+        int colonyNewPop = [_shipNode.userData[@"population"] intValue];
+        colonyNewPop = 10;
+        [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
+    }
+    
+    //asteroid reducing population after impact
+    else if (collision == (PhysicsCategoryShip | PhysicsCategoryAsteroid))
+    {
+        int newPop = [_shipNode.userData[@"population"] intValue];
+        newPop -= 20;
+        [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+        NSLog(@"Earth contact with asteroid");
+    }
+    
+    //asteroid reducing population after impact
+    else if (collision == (PhysicsCategoryControlColony | PhysicsCategoryAsteroid))
+    {
+        int newPop = [contact.bodyA.node.userData[@"population"] intValue];
+        newPop -= 20;
+        [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+        NSLog(@"Colony contact with asteroid");
     }
     
     //Colony turning into control colony
@@ -411,12 +476,14 @@
         NSLog(@"New colony");
         contact.bodyB.node.name = @"controlColony";
         contact.bodyA.node.name = @"controlColony";
+        [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+        [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
     }
     
     //black hole force explosion and disappear
     else if ( (collision == (PhysicsCategoryShip | PhysicsCategoryBlackHole)) | (collision == (PhysicsCategoryControlColony | PhysicsCategoryBlackHole)) | (collision == (PhysicsCategoryAsteroid | PhysicsCategoryBlackHole)) )
     {
-        NSLog(@"explodeytime!");
+        NSLog(@"black hole explode");
         for (SKSpriteNode *node in _gameNode.children)
         {
             CGPoint offset = CGPointMake(contact.bodyB.node.position.x - node.position.x, contact.bodyB.node.position.y - node.position.y);
