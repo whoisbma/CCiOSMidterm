@@ -42,13 +42,15 @@
     SKSpriteNode *_blueSunNode;
     SKSpriteNode *_colonyPlanetNode;
     SKSpriteNode *_blackHoleNode;
-    SKLabelNode *_fuelUI;
+    //SKLabelNode *_fuelUI;
     
     int _currentLevel;
     int _swipeCounter;
     float _newX;
     float _newY;
-    int _timer;
+    //int _timer;
+    int _totalPopulation;
+    int _levelGoal;
     
     CGPoint _touchLocation;
     CGPoint _releaseLocation;
@@ -68,7 +70,6 @@
     //will need new arrays for:
     //hotZoneShapes
     //coldZoneShapes
-    
 }
 
 
@@ -89,7 +90,9 @@
 
 - (void) initializeScene
 {
-    self.backgroundColor = [SKColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1.0];
+    
+    //_levelGoal = 999;
+    self.backgroundColor = [SKColor colorWithRed:0.05 green:0.05 blue:0.1 alpha:1.0];
     _gameNode = [SKNode node];
     [self addChild:_gameNode];
     self.physicsWorld.gravity = CGVectorMake(0, 0); //set gravity to zero
@@ -97,46 +100,27 @@
     self.physicsWorld.contactDelegate = self;
     
     _blackHoles = [[NSMutableArray alloc] init];
-    
-//    _blackHoleLoc = [[NSMutableArray alloc] init];  //for storing locations of black holes
-//    _newBlackHoleLoc = [[NSMutableArray alloc] init];  //for updating black hole loc positions
-//    _newBlackHoleSize = [[NSMutableArray alloc] init];
     _populationLabels = [[NSMutableArray alloc] init]; // for storing all planet population labels
     _colonyPlanets = [[NSMutableArray alloc]init];  // for keeping array of all the colony planets to use with the labels
     _eventHorizonShapes = [[NSMutableArray alloc]init];
     _suns = [[NSMutableArray alloc]init];
 
-    [self addShipAtPosition:CGPointMake(self.size.width/2,self.size.height/2-100) withSize:CGSizeMake(16,16) withDensity:1.0]; //adds ship at center
-    [self addAsteroidAtPosition:CGPointMake(100, 100) withSize:CGSizeMake(16, 16)];
-    [self addAsteroidAtPosition:CGPointMake(250, 200) withSize:CGSizeMake(24, 24)];
-    [self addAsteroidAtPosition:CGPointMake(280, 350) withSize:CGSizeMake(32, 32)];
-    [self addBlueSunAtPosition:CGPointMake(100, 400) withSize:CGSizeMake(24, 24)];
-    [self addSunAtPosition:CGPointMake(190, 330) withSize:CGSizeMake(100, 100)];
-    [self addColonyPlanetAtPosition:CGPointMake(50, 200) withSize: CGSizeMake(24,24)];
-    [self addColonyPlanetAtPosition:CGPointMake(250, 500) withSize: CGSizeMake(48,48)];
-    [self addBlackHoleAtPosition:CGPointMake(50, 470) withSize:CGSizeMake(12, 12)];
-    [self addBlackHoleAtPosition:CGPointMake(280, 40) withSize:CGSizeMake(8, 8)];
-    //[self addSunAtPosition:CGPointMake(50, 470) withSize:CGSizeMake(48, 48)];
-    
     SKSpriteNode * _vignette = [SKSpriteNode spriteNodeWithImageNamed:@"vignette"];
     _vignette.position = CGPointMake(self.size.width/2, self.size.height/2);
     _vignette.size = CGSizeMake(self.size.width, self.size.height);
     [_gameNode addChild:_vignette];
     
-    //NSLog(@"array objects: %@", [self getObjectsOfName:@"blackHole" inNode:self]);
-}
-
-- (void)setupLevel
-{
-    
+    _currentLevel = 1;
+    [self setupLevel: _currentLevel];
 }
 
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                           CREATE GAME OBJECTS                                              |
+//|                                  C R E A T E  G A M E  O B J E C T S                                       |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
+
 
 - (void) addShipAtPosition:(CGPoint)pos withSize:(CGSize)size withDensity:(CGFloat)density
 {
@@ -144,7 +128,6 @@
     _shipNode.name = @"earth";
     _shipNode.position = pos;
     _shipNode.size = size;
-    
     [_gameNode addChild:_shipNode];
     
     _shipNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:size.width/2 ];
@@ -161,7 +144,7 @@
     [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
     [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
     [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isCold"];
-
+    
     //NSLog(@"population = %@", [_shipNode.userData valueForKey:@"population"]);
     //NSLog(@"earth population (by starting userData)= %i", [_shipNode.userData[@"population"] intValue]);
     
@@ -171,7 +154,7 @@
     _earthPopulationLabel.color = [SKColor whiteColor];
     [_shipNode addChild:_earthPopulationLabel];
     _earthPopulationLabel.text = [NSString stringWithFormat:@"%i", [_shipNode.userData[@"population"] intValue] ];
-
+    
     //NSLog(@"earth population = %i", [_shipNode.userData[@"population"] intValue]);
     //NSLog(@"earth max population = %@", [_shipNode.userData valueForKey:@"maxPopulation"]);
 }
@@ -233,7 +216,7 @@
     _sunNode.name = @"sun";
     _sunNode.position = pos;
     _sunNode.size = size;
-    SKAction *action = [SKAction rotateByAngle:M_PI duration:10];
+    SKAction *action = [SKAction rotateByAngle:M_PI duration:100];
     [_sunNode runAction:[SKAction repeatActionForever:action]];
     
     [_gameNode addChild:_sunNode];
@@ -275,7 +258,7 @@
     hotZoneShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
     hotZoneShapeNode.antialiased = NO;
     hotZoneShapeNode.lineWidth = 1;
-    [self addChild:hotZoneShapeNode];
+    [_gameNode addChild:hotZoneShapeNode];
     
     CGRect coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
     SKShapeNode *coldZoneShapeNode = [[SKShapeNode alloc] init];
@@ -285,7 +268,7 @@
     coldZoneShapeNode.strokeColor = [SKColor colorWithRed:0.00 green:0.0 blue:1.0 alpha:0.5];//SKColor.blueColor;
     coldZoneShapeNode.antialiased = NO;
     coldZoneShapeNode.lineWidth = 1;
-    [self addChild:coldZoneShapeNode];
+    [_gameNode addChild:coldZoneShapeNode];
     
     [_suns addObject:_sunNode];
 }
@@ -329,7 +312,7 @@
     eventHorizShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.5];
     eventHorizShapeNode.antialiased = NO;
     eventHorizShapeNode.lineWidth = 1;
-    [self addChild:eventHorizShapeNode];
+    [_gameNode addChild:eventHorizShapeNode];
     [_eventHorizonShapes addObject:eventHorizShapeNode];
 }
 
@@ -337,7 +320,7 @@
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                               TOUCHES BEGAN                                                |
+//|                                          T O U C H E S  B E G A N                                          |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -356,7 +339,7 @@
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                               TOUCHES MOVED                                                |
+//|                                          T O U C H E S  M O V E D                                          |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -422,7 +405,7 @@
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                               TOUCHES ENDED                                                |
+//|                                          T O U C H E S  E N D E D                                          |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -475,7 +458,7 @@
         //|                                 burn up population if too close to sun                                     |
         //|____________________________________________________________________________________________________________|
         
-        if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony | node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
+        if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony | node.physicsBody.categoryBitMask == PhysicsCategoryShip) {                       //I THINK THAT THIS CAN BE COMMENTED OUT AND THE BLOCK CAN BE ATTACHED TO ABOVE BLOCK
             for (int i = 0; i < [_suns count]; i++) {
                 SKSpriteNode * thisSun = _suns[i];
                 CGPoint point = thisSun.position;
@@ -516,6 +499,20 @@
                 node.color = nil;
             }
         }
+    }
+    
+    // get total population after refreshing it
+    _totalPopulation = 0;
+    int earthPopulation = [_shipNode.userData[@"population"] intValue];
+    _totalPopulation += earthPopulation;
+    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        int colonyPopulation = [node.userData[@"population"] intValue];
+        _totalPopulation += colonyPopulation;
+    }];
+    //win-state
+    if ( _totalPopulation >= _levelGoal) {
+        [self win];
+        NSLog(@"SUCCESS");
     }
     
     //______________________________________________________________________________________________________________
@@ -620,12 +617,13 @@
         _eventHorizonShapes[i] = currentShape;
     }
     //DO MORE FOR THE HOT ZONE AND COLD ZONE ONCE IT IS WORKING  */
+    
 }
 
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                           DID SIMULATE PHYSICS                                             |
+//|                                   D I D  S I M U L A T E  P H Y S I C S                                    |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -640,7 +638,7 @@
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                             COLLISION LOOP                                                 |
+//|                                        C O L L I S I O N  L O O P                                          |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -738,5 +736,127 @@
     
 }
 
+//this needs fixing. win method. currently generates a ton of nodes.
+-(void)win
+{
+    if (_currentLevel < 4) {
+        _currentLevel ++;
+    }
+    NSLog(@"[win]");
+    [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+    //do the same for colony nodes
+    
+    [self inGameMessage:@"COMPLETE"];
+    _totalPopulation = 0;
+    
+    [self runAction:
+     [SKAction sequence:
+      @[[SKAction waitForDuration:5.0],
+        [SKAction performSelector:@selector(newGame) onTarget:self]]]];
+}
+
+-(void)newGame
+{
+    [_gameNode removeAllChildren];  //remove all sprites from _gameNode
+    [self setupLevel: _currentLevel];   //load the level configuration and build everything anew
+    [self inGameMessage:[NSString stringWithFormat:@"Level %i", _currentLevel]];
+    //show a message to the player
+}
+
+//this is just a convenience method, it will need some tuning
+- (void)inGameMessage:(NSString*)text
+{
+    SKLabelNode *label = [SKLabelNode labelNodeWithFontNamed:@"AvenirNext-Regular"];
+    label.text = text;
+    label.fontSize = 60.0;
+    label.color = [SKColor whiteColor];
+    label.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
+    [_gameNode addChild:label];
+    [label runAction: [SKAction sequence:@[
+                                           [SKAction waitForDuration:3.0],
+                                           [SKAction removeFromParent]]]];
+}
+
+//getting level stuff from the plist
+-(void) setupLevel:(int)levelNum
+{
+    NSString *fileName = [NSString stringWithFormat:@"level%i", levelNum];
+    NSString *filePath = [[NSBundle mainBundle] pathForResource:fileName ofType:@"plist"];
+    NSDictionary *level = [NSDictionary dictionaryWithContentsOfFile:filePath];
+    _levelGoal = [(level[@"levelGoal"])intValue];
+
+    if (level[@"earthProperties"]) {
+        [self addEarthFromArray:level[@"earthProperties"]];
+    }
+    
+    if (level[@"suns"]) {
+        [self addSunsFromArray:level[@"suns"]];
+    }
+    
+    if (level[@"blackHoles"]) {
+        [self addBlackHolesFromArray:level[@"blackHoles"]];
+    }
+
+    if (level[@"asteroids"]) {
+        [self addAsteroidsFromArray:level[@"asteroids"]];
+    }
+    
+    if (level[@"colonies"]) {
+        [self addColoniesFromArray:level[@"colonies"]];
+    }
+    
+    NSLog(@"%i", _levelGoal);
+}
+
+-(void)addEarthFromArray:(NSArray*)earthProperties
+{
+    for (NSDictionary *earth in earthProperties) {
+        CGSize size = CGSizeFromString(earth[@"size"]);
+        CGPoint position = CGPointFromString(earth[@"position"]);
+        CGFloat density = [(earth[@"density"])floatValue];
+        NSLog(@"addEarthFromArray");
+        [self addShipAtPosition:position withSize:size withDensity:density];
+    }
+}
+
+-(void)addSunsFromArray:(NSArray*)suns
+{
+    for (NSDictionary *sun in suns) {
+        CGSize size = CGSizeFromString(sun[@"size"]);
+        CGPoint position = CGPointFromString(sun[@"position"]);
+        [self addSunAtPosition:position withSize:size];
+        NSLog(@"addSunsFromArray");
+    }
+}
+
+-(void)addAsteroidsFromArray:(NSArray*)asteroids
+{
+    for (NSDictionary *asteroid in asteroids) {
+        CGSize size = CGSizeFromString(asteroid[@"size"]);
+        CGPoint position = CGPointFromString(asteroid[@"position"]);
+        [self addAsteroidAtPosition:position withSize:size];
+        NSLog(@"addAsteroidsFromArray");
+    }
+}
+
+-(void)addColoniesFromArray:(NSArray*)colonies
+{
+    for (NSDictionary *colony in colonies) {
+        CGPoint position = CGPointFromString(colony[@"position"]);
+        CGSize size = CGSizeFromString(colony[@"size"]);
+        [self addColonyPlanetAtPosition:position withSize:size];
+        NSLog(@"addColoniesFromArray");
+    }
+}
+
+-(void)addBlackHolesFromArray:(NSArray*)blackHoles
+{
+    for (NSDictionary *blackHole in blackHoles) {
+        CGPoint position = CGPointFromString(blackHole[@"position"]);
+        CGSize size = CGSizeFromString(blackHole[@"size"]);
+        [self addBlackHoleAtPosition:position withSize:size];
+        NSLog(@"addBlackHolesFromArray");
+    }
+}
 
 @end

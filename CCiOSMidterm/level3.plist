@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>levelGoal</key>
+	<string>240</string>
+	<key>earthProperties</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{150, 240}</string>
+			<key>size</key>
+			<string>{24, 24}</string>
+			<key>density</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+	<key>asteroids</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{100, 100}</string>
+			<key>size</key>
+			<string>{16, 16}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{138, 142}</string>
+			<key>size</key>
+			<string>{16, 16}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{250, 200}</string>
+			<key>size</key>
+			<string>{22, 22}</string>
+		</dict>
+	</array>
+	<key>suns</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{150, 560}</string>
+			<key>size</key>
+			<string>{400, 400}</string>
+		</dict>
+	</array>
+	<key>blackHoles</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{150,100} </string>
+			<key>size</key>
+			<string>{32, 32}</string>
+		</dict>
+	</array>
+</dict>
+</plist>

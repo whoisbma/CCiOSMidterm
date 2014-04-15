@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>levelGoal</key>
+	<string>240</string>
+	<key>earthProperties</key>
+	<array>
+		<dict>
+			<key>density</key>
+			<string>1.0</string>
+			<key>size</key>
+			<string>{24, 24}</string>
+			<key>position</key>
+			<string>{150, 240}</string>
+		</dict>
+	</array>
+	<key>suns</key>
+	<array>
+		<dict>
+			<key>size</key>
+			<string>{400, 400}</string>
+			<key>position</key>
+			<string>{150, 560}</string>
+		</dict>
+	</array>
+</dict>
+</plist>
