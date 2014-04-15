@@ -46,7 +46,6 @@
     SKLabelNode *_fuelUI;
     
     int _currentLevel;
-    //int _fuel;
     int _swipeCounter;
     float _newX;
     float _newY;
@@ -250,7 +249,7 @@
     //CERTAIN KINDS OF SUNS GROW WHEN THEY SWALLOW MASS? THEY CAN BECOME A BLACK HOLE OR EXPLODE?
     //will need to have a 'resting state?' or natural lifecycle?
     
-    CGRect eventHorizCircle = CGRectMake(pos.x - (eventHoriz/2), pos.y - (eventHoriz/2), eventHoriz, eventHoriz);
+    /*CGRect eventHorizCircle = CGRectMake(pos.x - (eventHoriz/2), pos.y - (eventHoriz/2), eventHoriz, eventHoriz);
     SKShapeNode *eventHorizShapeNode = [[SKShapeNode alloc] init];
     eventHorizShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:eventHorizCircle].CGPath;
     eventHorizShapeNode.fillColor = nil;
@@ -258,7 +257,7 @@
     eventHorizShapeNode.antialiased = NO;
     eventHorizShapeNode.lineWidth = 0.8;
     [self addChild:eventHorizShapeNode];
-    [_eventHorizonShapes addObject:eventHorizShapeNode];
+    [_eventHorizonShapes addObject:eventHorizShapeNode]; */
     
     CGRect hotZoneCircle = CGRectMake(pos.x - (hotZone/2), pos.y - (hotZone/2), hotZone, hotZone);
     SKShapeNode *hotZoneShapeNode = [[SKShapeNode alloc] init];
@@ -267,7 +266,7 @@
     hotZoneShapeNode.fillColor = nil;
     hotZoneShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
     hotZoneShapeNode.antialiased = NO;
-    hotZoneShapeNode.lineWidth = 0.8;
+    hotZoneShapeNode.lineWidth = 1;
     [self addChild:hotZoneShapeNode];
     
     CGRect coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
@@ -277,7 +276,7 @@
     coldZoneShapeNode.fillColor = nil;
     coldZoneShapeNode.strokeColor = [SKColor colorWithRed:0.00 green:0.0 blue:1.0 alpha:0.5];//SKColor.blueColor;
     coldZoneShapeNode.antialiased = NO;
-    coldZoneShapeNode.lineWidth = 0.8;
+    coldZoneShapeNode.lineWidth = 1;
     [self addChild:coldZoneShapeNode];
     
     [_suns addObject:_sunNode];
@@ -306,10 +305,24 @@
     [_blackHoleNode runAction:[SKAction repeatActionForever:action]];
     [_gameNode addChild:_blackHoleNode];
     
+    float eventHoriz = size.width * 30;
+    _blackHoleNode.userData = [[NSMutableDictionary alloc] init];
+    [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
+    
     _blackHoleNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: size.width/2 ];
     _blackHoleNode.physicsBody.dynamic = NO;
     _blackHoleNode.physicsBody.categoryBitMask = PhysicsCategoryBlackHole;
     [_blackHoleLoc addObject:[NSValue valueWithCGPoint:pos]];
+    
+    CGRect eventHorizCircle = CGRectMake(pos.x - (eventHoriz/2), pos.y - (eventHoriz/2), eventHoriz, eventHoriz);
+    SKShapeNode *eventHorizShapeNode = [[SKShapeNode alloc] init];
+    eventHorizShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:eventHorizCircle].CGPath;
+    eventHorizShapeNode.fillColor = nil;
+    eventHorizShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.5];
+    eventHorizShapeNode.antialiased = NO;
+    eventHorizShapeNode.lineWidth = 1;
+    [self addChild:eventHorizShapeNode];
+    [_eventHorizonShapes addObject:eventHorizShapeNode];
 }
 
 
@@ -498,7 +511,6 @@
                 node.colorBlendFactor = 0.0;
                 node.color = nil;
             }
-        
         }
     }
     
