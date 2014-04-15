@@ -10,7 +10,6 @@
 
 //refactor? make new classes?
 
-//black holes only attract within certain distances?
 //asteroids catch on fire?
 
 //no movement when any controlled object at edge of screen?
@@ -18,7 +17,7 @@
 
 //GAS PLANETS can turn into suns?
 
-//certain hospitable planets do not regenerate if population drops below zero?
+//certain hospitable planets do not regenerate if population drops below zero? or regenerate at ALL? (use alien planet sprite)
 
 //bumping into stuff makes people fall off? twinkly stars to pick up?
 
@@ -55,9 +54,11 @@
     CGPoint _releaseLocation;
     CGVector _velocity;
     
-    NSMutableArray *_blackHoleLoc;
-    NSMutableArray *_newBlackHoleLoc;
-    NSMutableArray *_newBlackHoleSize;
+    //NSMutableArray *_blackHoleLoc;
+    //NSMutableArray *_newBlackHoleLoc;
+    //NSMutableArray *_newBlackHoleSize;
+    NSMutableArray *_blackHoles;
+    NSMutableArray *_newBlackHoles;
     
     SKLabelNode *_earthPopulationLabel;
     NSMutableArray *_populationLabels;
@@ -95,9 +96,11 @@
     self.physicsBody = [SKPhysicsBody bodyWithEdgeLoopFromRect:self.frame];
     self.physicsWorld.contactDelegate = self;
     
-    _blackHoleLoc = [[NSMutableArray alloc] init];  //for storing locations of black holes
-    _newBlackHoleLoc = [[NSMutableArray alloc] init];  //for updating black hole loc positions
-    _newBlackHoleSize = [[NSMutableArray alloc] init];
+    _blackHoles = [[NSMutableArray alloc] init];
+    
+//    _blackHoleLoc = [[NSMutableArray alloc] init];  //for storing locations of black holes
+//    _newBlackHoleLoc = [[NSMutableArray alloc] init];  //for updating black hole loc positions
+//    _newBlackHoleSize = [[NSMutableArray alloc] init];
     _populationLabels = [[NSMutableArray alloc] init]; // for storing all planet population labels
     _colonyPlanets = [[NSMutableArray alloc]init];  // for keeping array of all the colony planets to use with the labels
     _eventHorizonShapes = [[NSMutableArray alloc]init];
@@ -121,6 +124,11 @@
     [_gameNode addChild:_vignette];
     
     //NSLog(@"array objects: %@", [self getObjectsOfName:@"blackHole" inNode:self]);
+}
+
+- (void)setupLevel
+{
+    
 }
 
 //______________________________________________________________________________________________________________
@@ -312,7 +320,7 @@
     _blackHoleNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: size.width/2 ];
     _blackHoleNode.physicsBody.dynamic = NO;
     _blackHoleNode.physicsBody.categoryBitMask = PhysicsCategoryBlackHole;
-    [_blackHoleLoc addObject:[NSValue valueWithCGPoint:pos]];
+    //[_blackHoleLoc addObject:[NSValue valueWithCGPoint:pos]];
     
     CGRect eventHorizCircle = CGRectMake(pos.x - (eventHoriz/2), pos.y - (eventHoriz/2), eventHoriz, eventHoriz);
     SKShapeNode *eventHorizShapeNode = [[SKShapeNode alloc] init];
@@ -426,7 +434,7 @@
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
-//|                                               UPDATE LOOP                                                  |
+//|                                           U P D A T E  L O O P                                             |
 //|                                                                                                            |
 //|____________________________________________________________________________________________________________|
 
@@ -437,18 +445,11 @@
     //|                        get all blackhole positions and sizes to use for forces                             |
     //|____________________________________________________________________________________________________________|
     
-    _newBlackHoleLoc = [[NSMutableArray alloc]init];    //THIS IS WEIRD. WHAT DOES IT MEAN THAT I'M REINITIALIZING THIS?
+    _newBlackHoles = [[NSMutableArray alloc]init];
     [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
-        [_newBlackHoleLoc addObject: [NSValue valueWithCGPoint:node.position]];
+        [_newBlackHoles addObject:node];
     }];
-    //NSLog(@"array objects: %@", newArray);
-    _blackHoleLoc = _newBlackHoleLoc;
-    
-    [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
-        [_newBlackHoleSize addObject: [NSNumber numberWithFloat:node.frame.size.width]];
-    }];
-    
-    
+    _blackHoles = _newBlackHoles;
     for (SKSpriteNode * node in _gameNode.children)
     {
         //______________________________________________________________________________________________________________
@@ -457,14 +458,16 @@
         //|____________________________________________________________________________________________________________|
         
         if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony | node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
-            for (int i = 0; i < [_blackHoleLoc count]; i++) {
-                CGPoint point = [(NSValue*) [_blackHoleLoc objectAtIndex:i] CGPointValue];
+            for (int i = 0; i < [_blackHoles count]; i++) {
+                SKSpriteNode * thisBlackHole = _blackHoles[i];
+                CGPoint point = thisBlackHole.position;
+                CGSize size = thisBlackHole.size;
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
                 CGPoint direction = CGPointMake(offset.x / length, offset.y / length);
-                [node.physicsBody applyForce: CGVectorMake(direction.x * 0.01 * [[_newBlackHoleSize objectAtIndex:i] floatValue], direction.y * 0.01 * [[_newBlackHoleSize objectAtIndex:i] floatValue])];
-                //NSLog(@"%@", NSStringFromCGPoint(CGPointMake(point.x, point.y)));
-                //NSLog(@"%f", length);
+                if (length < [thisBlackHole.userData[@"eventHorizon"] intValue]/2) {        //black holes only attract within certain distances
+                    [node.physicsBody applyForce: CGVectorMake(direction.x * 0.01 * size.width, direction.y * 0.01 * size.width )];
+                }
             }
         }
         //______________________________________________________________________________________________________________
@@ -499,6 +502,7 @@
                     }
                 }
             }
+            //change colors
             if ( [node.userData[@"isHot"] boolValue] == YES) {
                 node.colorBlendFactor = 0.5;
                 node.color = [SKColor redColor];
@@ -598,7 +602,7 @@
     
     /*
     //--------------------------------------------------------------------------------------------------------------------
-    //BELOW IS TO MAKE THE EVENT HORIZON GROW WHEN THE SUN CHANGES SHAPE, ETC.
+    //BELOW IS TO MAKE THE EVENT HORIZON GROW WHEN THE SUN CHANGES SHAPE, ETC.  (would need to add logic for the new black hole approach too)
     //--------------------------------------------------------------------------------------------------------------------
     for (int i = 0; i <[_eventHorizonShapes count]; i++) {
         SKShapeNode * currentShape = _eventHorizonShapes[i];
