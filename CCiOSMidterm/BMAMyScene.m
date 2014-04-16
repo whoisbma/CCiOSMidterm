@@ -69,7 +69,7 @@
     NSMutableArray *_eventHorizonShapes;
     NSMutableArray *_suns;
     //will need new arrays for:
-    //hotZoneShapes
+    NSMutableArray *_hotZoneShapes;
     //coldZoneShapes
 }
 
@@ -91,7 +91,7 @@
 
 - (void) initializeScene
 {
-    self.backgroundColor = [SKColor colorWithRed:0.05 green:0.05 blue:0.1 alpha:1.0];
+    self.backgroundColor = [SKColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1.0];
     _gameNode = [SKNode node];
     [self addChild:_gameNode];
     self.physicsWorld.gravity = CGVectorMake(0, 0); //set gravity to zero
@@ -102,6 +102,7 @@
     _populationLabels = [[NSMutableArray alloc] init]; // for storing all planet population labels
     _colonyPlanets = [[NSMutableArray alloc]init];  // for keeping array of all the colony planets to use with the labels
     _eventHorizonShapes = [[NSMutableArray alloc]init];
+    _hotZoneShapes = [[NSMutableArray alloc]init];
     _suns = [[NSMutableArray alloc]init];
     
     _currentLevel = 1;
@@ -222,13 +223,15 @@
     
     float eventHoriz = size.width * 3;
     float maxSize = size.width * 3;
-    float hotZone = size.width * 2;
+    float hotZoneMax = size.width * 2;
     float coldZone = size.width * 5;
+    float hotZoneSize = size.width;
     
     _sunNode.userData = [[NSMutableDictionary alloc] init];
     [_sunNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
     [_sunNode.userData setObject:[NSNumber numberWithInt:maxSize] forKey:@"maxSize"];
-    [_sunNode.userData setObject:[NSNumber numberWithInt:hotZone] forKey:@"hotZone"];
+    [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneMax] forKey:@"hotZoneMax"];
+    [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneSize] forKey:@"hotZoneSize"];
     [_sunNode.userData setObject:[NSNumber numberWithInt:coldZone] forKey:@"coldZone"];
     
     //CERTAIN KINDS OF SUNS GROW WHEN THEY SWALLOW MASS? THEY CAN BECOME A BLACK HOLE OR EXPLODE?
@@ -241,19 +244,42 @@
     eventHorizShapeNode.strokeColor = [SKColor colorWithRed:1.00 green:1.0 blue:1.0 alpha:0.5];
     eventHorizShapeNode.antialiased = NO;
     eventHorizShapeNode.lineWidth = 0.8;
-    [self addChild:eventHorizShapeNode];
+    [_gameNode addChild:eventHorizShapeNode];
     [_eventHorizonShapes addObject:eventHorizShapeNode]; */
     
-    CGRect hotZoneCircle = CGRectMake(pos.x - (hotZone/2), pos.y - (hotZone/2), hotZone, hotZone);
+    
+    
+    /*  //this is my attempt to get a ton of shape nodes working for the sun radiation.
+     // it displays multiple shape nodes but animating them in update is a multidimensional array mess.............
+    
+     NSMutableArray *singleSunHotZoneShapeNodes = [[NSMutableArray alloc] init]; //stores all hotZoneShapeNodes for a single sun (10 of them)
+    
+    for (int i = 0; i < 11; i++) {
+        SKShapeNode *hotZoneShapeNode = [[SKShapeNode alloc] init];
+        CGRect hotZoneCircle = CGRectMake(pos.x - ((hotZoneSize+i*(size.width/10))/2), pos.y - ((hotZoneSize+i*(size.width/10))/2), hotZoneSize+i*(size.width/10), hotZoneSize+i*(size.width/10));
+        hotZoneShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+        hotZoneShapeNode.fillColor = nil;
+        hotZoneShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+        hotZoneShapeNode.antialiased = NO;
+        hotZoneShapeNode.lineWidth = 1;
+        [singleSunHotZoneShapeNodes addObject:hotZoneShapeNode];
+        [_gameNode addChild:hotZoneShapeNode];
+    }
+    [_hotZoneShapes addObject:singleSunHotZoneShapeNodes]; //singleSunHotZoneShapeNodes gets stored in _hotZoneShapes (total shapes for all suns)
+    */
+    
+    //works to animate a single shape node
     SKShapeNode *hotZoneShapeNode = [[SKShapeNode alloc] init];
-    hotZoneCircle = CGRectMake(pos.x - (hotZone/2), pos.y - (hotZone/2), hotZone, hotZone);
+    CGRect hotZoneCircle = CGRectMake(pos.x - hotZoneSize+(size.width)/2, pos.y - hotZoneSize+(size.width/2), hotZoneSize+size.width, hotZoneSize+size.width);
     hotZoneShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
     hotZoneShapeNode.fillColor = nil;
     hotZoneShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
     hotZoneShapeNode.antialiased = NO;
     hotZoneShapeNode.lineWidth = 1;
     [_gameNode addChild:hotZoneShapeNode];
+    [_hotZoneShapes addObject:hotZoneShapeNode];
     
+
     CGRect coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
     SKShapeNode *coldZoneShapeNode = [[SKShapeNode alloc] init];
     coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
@@ -263,7 +289,6 @@
     coldZoneShapeNode.antialiased = NO;
     coldZoneShapeNode.lineWidth = 1;
     [_gameNode addChild:coldZoneShapeNode];
-    
     [_suns addObject:_sunNode];
 }
 
@@ -358,7 +383,13 @@
             if ( [_shipNode.userData[@"population"] intValue] > 0 ) {
                 [_shipNode.physicsBody applyForce: CGVectorMake(_newX, _newY)];
                 int newPop = [_shipNode.userData[@"population"] intValue];
-                newPop -= 4;//change based on speed?
+                
+                if (([_shipNode.userData[@"isHot"] boolValue] == NO) && ([_shipNode.userData[@"isCold"] boolValue] == NO)){
+                    newPop -= 6;//change based on speed?
+                }
+                else {
+                    newPop -= 1;
+                }
                 if (newPop < 0) {
                     newPop = 0;
                 }
@@ -378,7 +409,12 @@
                 if ([node.userData[@"population"] intValue] > 0 ) {
                     [node.physicsBody applyForce: CGVectorMake(_newX, _newY)];
                     int newPop = [node.userData[@"population"] intValue];
-                    newPop -= 4;
+                    if (([node.userData[@"isHot"] boolValue] == NO) && ([node.userData[@"isCold"] boolValue] == NO)){
+                        newPop -= 6;
+                    }
+                    else {
+                        newPop -=1;
+                    }
                     if (newPop < 0) {
                         newPop = 0;
                     }
@@ -464,7 +500,7 @@
                 CGPoint point = thisSun.position;
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
-                if (length < [thisSun.userData[@"hotZone"] intValue]/2) {
+                if (length < [thisSun.userData[@"hotZoneMax"] intValue]/2) {
                     [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isHot"];
                 }
                 else {
@@ -494,8 +530,6 @@
             }
         }
     }
-    
- 
     
     // get total population after refreshing it
     _totalPopulation = 0;
@@ -624,7 +658,77 @@
     
     
     
-    NSLog(@"population is %i", [_shipNode.userData[@"population"]intValue]);
+    /* //the attempt to animate an array of shapenodes for each sun. it sort of works but all insane............
+    for (int i = 0; i < [_suns count]; i++) {
+        SKSpriteNode * newSun = _suns[i];
+        CGPoint pos = newSun.position;
+        float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
+        float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
+        NSMutableArray * newSingleSunHotZoneShapeNodes = [[NSMutableArray alloc] init];
+        newSingleSunHotZoneShapeNodes = _hotZoneShapes[i];
+        for (int j = 0; j < [newSingleSunHotZoneShapeNodes count]; j++) {
+            SKShapeNode * newShape = newSingleSunHotZoneShapeNodes[j];
+            
+            int newHotZoneInt = (int) newHotZone;
+            int newHotMaxInt = (int) newHotMax;
+        
+            if (newHotZoneInt < newHotMaxInt) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
+            newHotZone +=10;
+                [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
+            }
+            else {
+                //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+                [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
+                //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            }
+            CGRect hotZoneCircle = CGRectMake(pos.x - ((newHotZone+j*(newSun.size.width/10))/2), pos.y - ((newHotZone+j*(newSun.size.width/10))/2), newHotZone+j*(newSun.size.width/10), newHotZone+j*(newSun.size.width/10));
+            newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+            newShape.fillColor = nil;
+            newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+            newShape.antialiased = NO;
+            newShape.lineWidth = 1;
+            newSingleSunHotZoneShapeNodes[j] = newShape;
+        }
+        _hotZoneShapes[i] = newSingleSunHotZoneShapeNodes;
+        _suns[i] = newSun;
+    }*/
+    
+    //animates a single sun shape node
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape = _hotZoneShapes[i];
+        SKSpriteNode * newSun = _suns[i];
+        CGPoint pos = newSun.position;
+        float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
+        float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
+        //NSLog(@"incrementing hot zone size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        //NSLog(@"new hot zone: %f", newHotZone);
+        //NSLog(@"hot zone max: %f", [newSun.userData[@"HotZoneMax"]floatValue]);
+        //if ([newSun.userData[@"HotZoneGrow"]boolValue] == YES) {  ///NEED TO ADD THIS DICTIONARY KEY
+        
+        int newHotZoneInt = (int) newHotZone;
+        int newHotMaxInt = (int) newHotMax;
+        
+        if (newHotZoneInt < newHotMaxInt) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
+            newHotZone +=3;
+            [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
+        hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
+        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+        newShape.fillColor = nil;
+        newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+        newShape.antialiased = NO;
+        newShape.lineWidth = 1;
+        _hotZoneShapes[i] = newShape;
+        _suns[i] = newSun;
+    }
+    
+   // NSLog(@"population is %i", [_shipNode.userData[@"population"]intValue]);
     
     
 }
@@ -656,28 +760,38 @@
     
     if (collision == ( PhysicsCategoryShip | PhysicsCategorySun) ) {
         NSLog(@"earth destruction");
-        [contact.bodyA.node removeFromParent];
+        if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
+            [contact.bodyA.node removeFromParent];
+        }
+        else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
+            [contact.bodyB.node removeFromParent];
+        }
         NSLog(@"sun grows");
         //ENTER MYSTERY CODE HERE! contact.bodyB.node.size is no good.
         //[contact.bodyB.node setScale:2.0];
         CGFloat absorbMass = contact.bodyA.node.frame.size.width * 0.01; //THIS SORT OF WORKS BUT I WANTED MASS
         NSLog(@"width: %f", absorbMass);
-        SKAction *grow = [SKAction scaleTo:1.0+absorbMass duration:3.0]; //THIS ISN'T REALLY WORKING THE WAY I WANT IT TO, ESP WHEN IT STACKS
-        SKAction *wait = [SKAction waitForDuration:5.0];
-        SKAction *shrink = [SKAction scaleTo:1.0-absorbMass/2 duration:10.0]; //MATH ISN'T RIGHT FOR THE SHRINK
-        [contact.bodyB.node runAction:
-        [SKAction sequence:@[grow, wait, shrink]]];
+        //SKAction *grow = [SKAction scaleTo:1.0+absorbMass duration:3.0]; //THIS ISN'T REALLY WORKING THE WAY I WANT IT TO, ESP WHEN IT STACKS
+       // SKAction *wait = [SKAction waitForDuration:5.0];
+        //SKAction *shrink = [SKAction scaleTo:1.0-absorbMass/2 duration:10.0]; //MATH ISN'T RIGHT FOR THE SHRINK
+        //[contact.bodyB.node runAction:
+        //[SKAction sequence:@[grow, wait, shrink]]];
     }
     
     else if (collision == (PhysicsCategorySun | PhysicsCategoryControlColony) | collision == (PhysicsCategorySun | PhysicsCategoryColony))
     {
         NSLog(@"Colony death");
-        [contact.bodyB.node removeFromParent];
-        SKAction *grow = [SKAction scaleTo:1.4 duration:3.0];
-        SKAction *wait = [SKAction waitForDuration:10.0];
-        SKAction *shrink = [SKAction scaleTo:1.0 duration:10.0];
-        [contact.bodyA.node runAction:
-        [SKAction sequence:@[grow, wait, shrink]]];
+        if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
+            [contact.bodyB.node removeFromParent];
+        }
+        else if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
+            [contact.bodyA.node removeFromParent];
+        }
+        //SKAction *grow = [SKAction scaleTo:1.4 duration:3.0];
+        //SKAction *wait = [SKAction waitForDuration:10.0];
+        //SKAction *shrink = [SKAction scaleTo:1.0 duration:10.0];
+        //[contact.bodyA.node runAction:
+        //[SKAction sequence:@[grow, wait, shrink]]];
     }
     
     //ship turning colony into control colony
@@ -690,7 +804,7 @@
         earthNewPop -= 20;
         [_shipNode.userData setObject:[NSNumber numberWithInt:earthNewPop] forKey:@"population"];
         int colonyNewPop = [_shipNode.userData[@"population"] intValue];
-        colonyNewPop = 10;
+        colonyNewPop = 1;
         [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
     }
     
