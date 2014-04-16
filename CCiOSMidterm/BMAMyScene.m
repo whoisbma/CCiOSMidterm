@@ -51,6 +51,7 @@
     //int _timer;
     int _totalPopulation;
     int _levelGoal;
+    bool _levelOver;
     
     CGPoint _touchLocation;
     CGPoint _releaseLocation;
@@ -90,8 +91,6 @@
 
 - (void) initializeScene
 {
-    
-    //_levelGoal = 999;
     self.backgroundColor = [SKColor colorWithRed:0.05 green:0.05 blue:0.1 alpha:1.0];
     _gameNode = [SKNode node];
     [self addChild:_gameNode];
@@ -104,11 +103,6 @@
     _colonyPlanets = [[NSMutableArray alloc]init];  // for keeping array of all the colony planets to use with the labels
     _eventHorizonShapes = [[NSMutableArray alloc]init];
     _suns = [[NSMutableArray alloc]init];
-
-    SKSpriteNode * _vignette = [SKSpriteNode spriteNodeWithImageNamed:@"vignette"];
-    _vignette.position = CGPointMake(self.size.width/2, self.size.height/2);
-    _vignette.size = CGSizeMake(self.size.width, self.size.height);
-    [_gameNode addChild:_vignette];
     
     _currentLevel = 1;
     [self setupLevel: _currentLevel];
@@ -347,7 +341,6 @@
 {
     //if (_swipeCounter < 10) {
     _swipeCounter++;
-    //_fuel -= 1;
     //NSLog(@"%i", _swipeCounter);
     
     for (UITouch *touch in touches) {
@@ -366,6 +359,9 @@
                 [_shipNode.physicsBody applyForce: CGVectorMake(_newX, _newY)];
                 int newPop = [_shipNode.userData[@"population"] intValue];
                 newPop -= 4;//change based on speed?
+                if (newPop < 0) {
+                    newPop = 0;
+                }
                 [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
             } else {
                 [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
@@ -374,7 +370,7 @@
 
         //______________________________________________________________________________________________________________
         //|                                                                                                            |
-        //|                                MOVE CONTROL COLONIES                                                       |
+        //|                                 M O V E  C O N T R O L  C O L O N I E S                                    |
         //|____________________________________________________________________________________________________________|
         
         [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
@@ -383,6 +379,9 @@
                     [node.physicsBody applyForce: CGVectorMake(_newX, _newY)];
                     int newPop = [node.userData[@"population"] intValue];
                     newPop -= 4;
+                    if (newPop < 0) {
+                        newPop = 0;
+                    }
                     //NSLog(@"colony population = %i", [node.userData[@"population"] intValue]);
                     //node.userData = [@{@"population":@(newPop)} mutableCopy];
                     [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
@@ -423,6 +422,9 @@
 
 -(void)update:(CFTimeInterval)currentTime   /* Called before each frame is rendered */
 {
+    
+    //NSLog(@"can control %d", [_shipNode.userData[@"canControl"]boolValue]);
+    
     //______________________________________________________________________________________________________________
     //|                                                                                                            |
     //|                        get all blackhole positions and sizes to use for forces                             |
@@ -452,22 +454,17 @@
                     [node.physicsBody applyForce: CGVectorMake(direction.x * 0.01 * size.width, direction.y * 0.01 * size.width )];
                 }
             }
-        }
-        //______________________________________________________________________________________________________________
-        //|                                                                                                            |
-        //|                                 burn up population if too close to sun                                     |
-        //|____________________________________________________________________________________________________________|
         
-        if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony | node.physicsBody.categoryBitMask == PhysicsCategoryShip) {                       //I THINK THAT THIS CAN BE COMMENTED OUT AND THE BLOCK CAN BE ATTACHED TO ABOVE BLOCK
+            //______________________________________________________________________________________________________________
+            //|                                                                                                            |
+            //|                                 burn up population if too close to sun                                     |
+            //|____________________________________________________________________________________________________________|
             for (int i = 0; i < [_suns count]; i++) {
                 SKSpriteNode * thisSun = _suns[i];
                 CGPoint point = thisSun.position;
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
                 if (length < [thisSun.userData[@"hotZone"] intValue]/2) {
-                    int newPop = [node.userData[@"population"] intValue];
-                    newPop -= 1;
-                    [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
                     [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isHot"];
                 }
                 else {
@@ -475,9 +472,6 @@
                 }
                 if ([_suns count] == 1) {  //more than one cold zone overlapping hot zones doesn't make sense........
                     if (length > [thisSun.userData[@"coldZone"] intValue]/2) {
-                        int newPop = [node.userData[@"population"] intValue];
-                        newPop -= 1;
-                        [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
                         [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isCold"];
                     }
                     else {
@@ -501,18 +495,25 @@
         }
     }
     
+ 
+    
     // get total population after refreshing it
     _totalPopulation = 0;
     int earthPopulation = [_shipNode.userData[@"population"] intValue];
     _totalPopulation += earthPopulation;
+    
+    //this is where my winstate issue arises from.
     [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
         int colonyPopulation = [node.userData[@"population"] intValue];
         _totalPopulation += colonyPopulation;
-    }];
+        }];
+    
     //win-state
-    if ( _totalPopulation >= _levelGoal) {
+    if ((_totalPopulation >= _levelGoal) && (_levelOver == NO)) {
         [self win];
         NSLog(@"SUCCESS");
+//        _totalPopulation = 999;
+        _levelOver = YES;
     }
     
     //______________________________________________________________________________________________________________
@@ -522,10 +523,13 @@
     
     if ( [_shipNode.userData[@"canControl"] boolValue] == YES )
     {
-        if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] ) {
-            int newPop = [_shipNode.userData[@"population"] intValue];
-            newPop += 1;
-            [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+        if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] )  {
+            if (([_shipNode.userData[@"isHot"] boolValue] == NO) && ([_shipNode.userData[@"isCold"] boolValue] == NO)){
+                int newPop = [_shipNode.userData[@"population"] intValue];
+                newPop += 1;
+                [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                //NSLog(@"added population");
+            }
         }
     }
     //______________________________________________________________________________________________________________
@@ -555,9 +559,11 @@
         if ( [node.userData[@"canControl"] boolValue] == YES) {
             if (([node.userData[@"population"] intValue] < [node.userData[@"maxPopulation"] intValue] )     ) {  //comment these two out if below
                 //   && ([node.userData[@"population"] intValue] >= 0 )){  //for testing no regeneration if below 0?  //SEE BELOW RE. NEW TYPE
-                int newPop = [node.userData[@"population"] intValue];
-                newPop += 1;
-                [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                if (([node.userData[@"isHot"] boolValue] == NO) && ([node.userData[@"isCold"] boolValue] == NO)){
+                    int newPop = [node.userData[@"population"] intValue];
+                    newPop += 1;
+                    [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                }
             }
         //______________________________________________________________________________________________________________
         //|                                 or count down the timer until it can be controlled again                   |
@@ -581,14 +587,12 @@
     //|                                                                                                            |
     //|                                 REPLACE EARTH POPULATION LABEL text value                                  |
     //|____________________________________________________________________________________________________________|
-    
     _earthPopulationLabel.text = [NSString stringWithFormat:@"%i", [_shipNode.userData[@"population"] intValue] ];
     
     //______________________________________________________________________________________________________________
     //|                                                                                                            |
     //|                                REPLACE COLONY POPULATION LABEL text value                                  |
     //|____________________________________________________________________________________________________________|
-    
     for (int i = 0; i < [_populationLabels count]; i++)  // get all population labels
     {
         SKLabelNode * label = _populationLabels[i];   // make a new label equal to existing label  //KILL THESE NEW INITIALIZATIONS WITH A PRIVATE VAR?
@@ -618,6 +622,11 @@
     }
     //DO MORE FOR THE HOT ZONE AND COLD ZONE ONCE IT IS WORKING  */
     
+    
+    
+    NSLog(@"population is %i", [_shipNode.userData[@"population"]intValue]);
+    
+    
 }
 
 //______________________________________________________________________________________________________________
@@ -629,9 +638,8 @@
 
 - (void)didSimulatePhysics  /* called just after physics get simulated */
 {
-    //_newX = 0;
-    //_newY = 0;
-    //_velocity = _shipNode.physicsBody.velocity;
+
+    
 }
 
 
@@ -743,15 +751,14 @@
         _currentLevel ++;
     }
     NSLog(@"[win]");
-    [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+    //[_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
     //do the same for colony nodes
     
     [self inGameMessage:@"COMPLETE"];
-    _totalPopulation = 0;
     
     [self runAction:
      [SKAction sequence:
-      @[[SKAction waitForDuration:5.0],
+      @[[SKAction waitForDuration:1.0],
         [SKAction performSelector:@selector(newGame) onTarget:self]]]];
 }
 
@@ -760,10 +767,9 @@
     [_gameNode removeAllChildren];  //remove all sprites from _gameNode
     [self setupLevel: _currentLevel];   //load the level configuration and build everything anew
     [self inGameMessage:[NSString stringWithFormat:@"Level %i", _currentLevel]];
-    //show a message to the player
 }
 
-//this is just a convenience method, it will need some tuning
+//this is just a temporary method for displaying text, it will need some tuning
 - (void)inGameMessage:(NSString*)text
 {
     SKLabelNode *label = [SKLabelNode labelNodeWithFontNamed:@"AvenirNext-Regular"];
@@ -780,10 +786,12 @@
 //getting level stuff from the plist
 -(void) setupLevel:(int)levelNum
 {
+    _levelOver = NO;
     NSString *fileName = [NSString stringWithFormat:@"level%i", levelNum];
     NSString *filePath = [[NSBundle mainBundle] pathForResource:fileName ofType:@"plist"];
     NSDictionary *level = [NSDictionary dictionaryWithContentsOfFile:filePath];
     _levelGoal = [(level[@"levelGoal"])intValue];
+    _totalPopulation = 0;
 
     if (level[@"earthProperties"]) {
         [self addEarthFromArray:level[@"earthProperties"]];
@@ -806,6 +814,11 @@
     }
     
     NSLog(@"%i", _levelGoal);
+    
+    SKSpriteNode * _vignette = [SKSpriteNode spriteNodeWithImageNamed:@"vignette"];
+    _vignette.position = CGPointMake(self.size.width/2, self.size.height/2);
+    _vignette.size = CGSizeMake(self.size.width, self.size.height);
+    [_gameNode addChild:_vignette];
 }
 
 -(void)addEarthFromArray:(NSArray*)earthProperties
