@@ -42,7 +42,6 @@
     SKSpriteNode *_blueSunNode;
     SKSpriteNode *_colonyPlanetNode;
     SKSpriteNode *_blackHoleNode;
-    //SKLabelNode *_fuelUI;
     
     int _currentLevel;
     int _swipeCounter;
@@ -57,13 +56,12 @@
     CGPoint _releaseLocation;
     CGVector _velocity;
     
-    //NSMutableArray *_blackHoleLoc;
-    //NSMutableArray *_newBlackHoleLoc;
-    //NSMutableArray *_newBlackHoleSize;
     NSMutableArray *_blackHoles;
     NSMutableArray *_newBlackHoles;
     
     SKLabelNode *_earthPopulationLabel;
+//    SKLabelNode *_levelGoalLabel;
+
     NSMutableArray *_populationLabels;
     NSMutableArray *_colonyPlanets;
     NSMutableArray *_eventHorizonShapes;
@@ -72,7 +70,6 @@
     NSMutableArray *_hotZoneShapes;
     //coldZoneShapes
 }
-
 
 - (instancetype)initWithSize:(CGSize)size
 {
@@ -214,8 +211,6 @@
     SKAction *action = [SKAction rotateByAngle:M_PI duration:100];
     [_sunNode runAction:[SKAction repeatActionForever:action]];
     
-    [_gameNode addChild:_sunNode];
-    
     _sunNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: size.width/2 ];
     _sunNode.physicsBody.dynamic = NO;
     _sunNode.physicsBody.categoryBitMask = PhysicsCategorySun;
@@ -226,6 +221,14 @@
     float hotZoneMax = size.width * 2;
     float coldZone = size.width * 5;
     float hotZoneSize = size.width;
+    
+    SKSpriteNode * sunGlow = [SKSpriteNode spriteNodeWithImageNamed:@"sun"];
+    sunGlow.position = pos;
+    sunGlow.size = CGSizeMake(hotZoneMax, hotZoneMax);
+    sunGlow.alpha = .1;
+    
+    [_gameNode addChild:sunGlow];
+    [_gameNode addChild:_sunNode];
     
     _sunNode.userData = [[NSMutableDictionary alloc] init];
     [_sunNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
@@ -267,6 +270,7 @@
     }
     [_hotZoneShapes addObject:singleSunHotZoneShapeNodes]; //singleSunHotZoneShapeNodes gets stored in _hotZoneShapes (total shapes for all suns)
     */
+    
     
     //works to animate a single shape node
     SKShapeNode *hotZoneShapeNode = [[SKShapeNode alloc] init];
@@ -533,20 +537,42 @@
     
     // get total population after refreshing it
     _totalPopulation = 0;
-    int earthPopulation = [_shipNode.userData[@"population"] intValue];
-    _totalPopulation += earthPopulation;
     
-    //this is where my winstate issue arises from.
+    __block int earthLose = 0;
+
+    int earthPopulation = [_shipNode.userData[@"population"] intValue];
+    if (( [_shipNode.userData[@"canControl"] boolValue] == YES )) {
+        _totalPopulation += earthPopulation;
+    }
+    if (([_shipNode.userData[@"canControl"] boolValue] == NO ) && ([_shipNode.userData[@"isHot"]boolValue] == YES)){
+        earthLose++;
+    }
+    
+    __block int coloniesLose = 0;
+    __block int coloniesNum = 0;
+    //this is where my winstate issue arises from....... (update: not sure if i still have issues?)
     [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        coloniesNum++;
         int colonyPopulation = [node.userData[@"population"] intValue];
-        _totalPopulation += colonyPopulation;
-        }];
+        if (( [node.userData[@"canControl"] boolValue] == YES )) {
+            _totalPopulation += colonyPopulation;
+        }
+        if (( [node.userData[@"canControl"] boolValue] == NO ) && ([node.userData[@"isHot"]boolValue] == YES)){
+            coloniesLose++;
+        }
+    }];
     
     //win-state
     if ((_totalPopulation >= _levelGoal) && (_levelOver == NO)) {
         [self win];
         NSLog(@"SUCCESS");
 //        _totalPopulation = 999;
+        _levelOver = YES;
+    }
+    
+    //lose-state
+    if ( (_totalPopulation == 0) && (earthLose > 0) && (coloniesLose == coloniesNum) && (_levelOver == NO) ) {
+        [self lose];
         _levelOver = YES;
     }
     
@@ -708,8 +734,8 @@
         int newHotZoneInt = (int) newHotZone;
         int newHotMaxInt = (int) newHotMax;
         
-        if (newHotZoneInt < newHotMaxInt) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
-            newHotZone +=3;
+        if (newHotZoneInt < newHotMaxInt+3) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
+            newHotZone += (newHotMax -newHotZone+25) * .05;
             [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
         }
         else {
@@ -721,16 +747,13 @@
         hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
         newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
         newShape.fillColor = nil;
-        newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+        newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
         newShape.antialiased = NO;
         newShape.lineWidth = 1;
+        newShape.alpha = 0.5;
         _hotZoneShapes[i] = newShape;
         _suns[i] = newSun;
     }
-    
-   // NSLog(@"population is %i", [_shipNode.userData[@"population"]intValue]);
-    
-    
 }
 
 //______________________________________________________________________________________________________________
@@ -762,9 +785,11 @@
         NSLog(@"earth destruction");
         if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
             [contact.bodyA.node removeFromParent];
+            [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
         }
         else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
             [contact.bodyB.node removeFromParent];
+            [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
         }
         NSLog(@"sun grows");
         //ENTER MYSTERY CODE HERE! contact.bodyB.node.size is no good.
@@ -783,9 +808,11 @@
         NSLog(@"Colony death");
         if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
             [contact.bodyB.node removeFromParent];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
         }
         else if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
             [contact.bodyA.node removeFromParent];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
         }
         //SKAction *grow = [SKAction scaleTo:1.4 duration:3.0];
         //SKAction *wait = [SKAction waitForDuration:10.0];
@@ -844,16 +871,34 @@
         NSLog(@"black hole explode");
         for (SKSpriteNode *node in _gameNode.children)
         {
+            //probably need to add a conditional to take care of the bodyA/bodyB confusion.......
             CGPoint offset = CGPointMake(contact.bodyB.node.position.x - node.position.x, contact.bodyB.node.position.y - node.position.y);
             CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
             CGPoint direction = CGPointMake(offset.x / length, offset.y / length);
             [node.physicsBody applyImpulse: CGVectorMake(-direction.x * contact.bodyB.node.frame.size.width * 0.3, -direction.y * contact.bodyB.node.frame.size.width * 0.3)];
         }
-        //NSValue * valToRemove = [NSValue valueWithCGPoint:contact.bodyB.node.position];
-        //[_blackHoleLoc removeObjectIdenticalTo:valToRemove];
-//        [_blackHoleLoc removeObjectIdenticalTo:[NSValue valueWithCGPoint:contact.bodyB.node.position]];
+        if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+        }
+        else if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+        }
+        else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+        }
+        if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+        }
         [contact.bodyA.node removeFromParent];
         [contact.bodyB.node removeFromParent];
+        [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+        [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
+        
+        // THE ABOVE IS MY DESPERATE ATTEMPT TO MAKE BLACK HOLES RESULT IN A LEVEL-FAIL STATE .......... :(
     }
     
 }
@@ -872,7 +917,17 @@
     
     [self runAction:
      [SKAction sequence:
-      @[[SKAction waitForDuration:1.0],
+      @[[SKAction waitForDuration:3.0],
+        [SKAction performSelector:@selector(newGame) onTarget:self]]]];
+}
+
+-(void)lose
+{
+    NSLog(@"lose");
+    [self inGameMessage:@"EXTINCT"];
+    [self runAction:
+     [SKAction sequence:
+      @[[SKAction waitForDuration:3.0],
         [SKAction performSelector:@selector(newGame) onTarget:self]]]];
 }
 
@@ -889,11 +944,11 @@
     SKLabelNode *label = [SKLabelNode labelNodeWithFontNamed:@"AvenirNext-Regular"];
     label.text = text;
     label.fontSize = 60.0;
-    label.color = [SKColor whiteColor];
+    label.fontColor = [SKColor whiteColor];
     label.position = CGPointMake(self.frame.size.width/2, self.frame.size.height/2);
     [_gameNode addChild:label];
     [label runAction: [SKAction sequence:@[
-                                           [SKAction waitForDuration:3.0],
+                                           [SKAction waitForDuration:1.0],
                                            [SKAction removeFromParent]]]];
 }
 
@@ -906,6 +961,14 @@
     NSDictionary *level = [NSDictionary dictionaryWithContentsOfFile:filePath];
     _levelGoal = [(level[@"levelGoal"])intValue];
     _totalPopulation = 0;
+    
+    SKLabelNode * levelGoalLabel = [SKLabelNode labelNodeWithFontNamed:@"AvenirNext-Regular"];
+    levelGoalLabel.text = [NSString stringWithFormat:@"%d", _levelGoal];
+    levelGoalLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeCenter;
+    levelGoalLabel.fontSize = 160;
+    levelGoalLabel.fontColor = [SKColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1];
+    levelGoalLabel.position = CGPointMake(self.frame.size.width/2, 200);
+    [_gameNode addChild:levelGoalLabel];
 
     if (level[@"earthProperties"]) {
         [self addEarthFromArray:level[@"earthProperties"]];
