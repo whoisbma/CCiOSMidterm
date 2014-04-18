@@ -68,6 +68,8 @@
     NSMutableArray *_suns;
     //will need new arrays for:
     NSMutableArray *_hotZoneShapes;
+    NSMutableArray *_hotZoneShapes2; //can this possibly be integrated into the first array? 2D array?......
+    NSMutableArray *_hotZoneShapes3; //3D?@?!
     //coldZoneShapes
 }
 
@@ -88,7 +90,7 @@
 
 - (void) initializeScene
 {
-    self.backgroundColor = [SKColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1.0];
+    self.backgroundColor = [SKColor colorWithRed:0 green:0 blue:0 alpha:1.0];
     _gameNode = [SKNode node];
     [self addChild:_gameNode];
     self.physicsWorld.gravity = CGVectorMake(0, 0); //set gravity to zero
@@ -100,6 +102,8 @@
     _colonyPlanets = [[NSMutableArray alloc]init];  // for keeping array of all the colony planets to use with the labels
     _eventHorizonShapes = [[NSMutableArray alloc]init];
     _hotZoneShapes = [[NSMutableArray alloc]init];
+    _hotZoneShapes2 = [[NSMutableArray alloc]init]; //blah!..
+    _hotZoneShapes3 = [[NSMutableArray alloc]init]; //BLAHHH!..
     _suns = [[NSMutableArray alloc]init];
     
     _currentLevel = 1;
@@ -221,13 +225,15 @@
     float hotZoneMax = size.width * 2;
     float coldZone = size.width * 5;
     float hotZoneSize = size.width;
-    
-    SKSpriteNode * sunGlow = [SKSpriteNode spriteNodeWithImageNamed:@"sun"];
-    sunGlow.position = pos;
-    sunGlow.size = CGSizeMake(hotZoneMax, hotZoneMax);
-    sunGlow.alpha = .1;
-    
-    [_gameNode addChild:sunGlow];
+    float hotZoneSize2 = size.width + size.width/2;
+    float hotZoneSize3 = size.width + size.width/4;
+//    
+//    SKSpriteNode * sunGlow = [SKSpriteNode spriteNodeWithImageNamed:@"sun"];
+//    sunGlow.position = pos;
+//    sunGlow.size = CGSizeMake(hotZoneMax, hotZoneMax);
+//    sunGlow.alpha = .05;
+    //disabled the glow
+ //   [_gameNode addChild:sunGlow];
     [_gameNode addChild:_sunNode];
     
     _sunNode.userData = [[NSMutableDictionary alloc] init];
@@ -235,6 +241,8 @@
     [_sunNode.userData setObject:[NSNumber numberWithInt:maxSize] forKey:@"maxSize"];
     [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneMax] forKey:@"hotZoneMax"];
     [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneSize] forKey:@"hotZoneSize"];
+        [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneSize2] forKey:@"hotZoneSize2"];
+        [_sunNode.userData setObject:[NSNumber numberWithInt:hotZoneSize3] forKey:@"hotZoneSize3"];     ///ARGHHHHH
     [_sunNode.userData setObject:[NSNumber numberWithInt:coldZone] forKey:@"coldZone"];
     
     //CERTAIN KINDS OF SUNS GROW WHEN THEY SWALLOW MASS? THEY CAN BECOME A BLACK HOLE OR EXPLODE?
@@ -281,18 +289,41 @@
     hotZoneShapeNode.antialiased = NO;
     hotZoneShapeNode.lineWidth = 1;
     [_gameNode addChild:hotZoneShapeNode];
+    
     [_hotZoneShapes addObject:hotZoneShapeNode];
     
+    SKShapeNode *hotZoneShapeNode2 = [[SKShapeNode alloc] init];
+    CGRect hotZoneCircle2 = CGRectMake(pos.x - hotZoneSize2/2, pos.y - hotZoneSize2/2, hotZoneSize2, hotZoneSize2);
+    hotZoneShapeNode2.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle2].CGPath;
+    hotZoneShapeNode2.fillColor = nil;
+    hotZoneShapeNode2.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+    hotZoneShapeNode2.antialiased = NO;
+    hotZoneShapeNode2.lineWidth = 1;
+    [_gameNode addChild:hotZoneShapeNode2];
+    
+    [_hotZoneShapes2 addObject:hotZoneShapeNode2];
+    
+    SKShapeNode *hotZoneShapeNode3 = [[SKShapeNode alloc] init];
+    CGRect hotZoneCircle3 = CGRectMake(pos.x - hotZoneSize3/2, pos.y - hotZoneSize3/2, hotZoneSize3, hotZoneSize3);
+    hotZoneShapeNode3.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle3].CGPath;
+    hotZoneShapeNode3.fillColor = nil;
+    hotZoneShapeNode3.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+    hotZoneShapeNode3.antialiased = NO;
+    hotZoneShapeNode3.lineWidth = 1;
+    [_gameNode addChild:hotZoneShapeNode3];
+    
+    [_hotZoneShapes3 addObject:hotZoneShapeNode3];
 
-    CGRect coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
-    SKShapeNode *coldZoneShapeNode = [[SKShapeNode alloc] init];
-    coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
-    coldZoneShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:coldZoneCircle].CGPath;
-    coldZoneShapeNode.fillColor = nil;
-    coldZoneShapeNode.strokeColor = [SKColor colorWithRed:0.00 green:0.0 blue:1.0 alpha:0.5];//SKColor.blueColor;
-    coldZoneShapeNode.antialiased = NO;
-    coldZoneShapeNode.lineWidth = 1;
-    [_gameNode addChild:coldZoneShapeNode];
+//    CGRect coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
+//    SKShapeNode *coldZoneShapeNode = [[SKShapeNode alloc] init];
+//    coldZoneCircle = CGRectMake(pos.x - (coldZone/2), pos.y - (coldZone/2), coldZone, coldZone);
+//    coldZoneShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:coldZoneCircle].CGPath;
+//    coldZoneShapeNode.fillColor = nil;
+//    coldZoneShapeNode.strokeColor = [SKColor colorWithRed:0.00 green:0.0 blue:1.0 alpha:0.5];//SKColor.blueColor;
+//    coldZoneShapeNode.antialiased = NO;
+//    coldZoneShapeNode.lineWidth = 1;
+//    [_gameNode addChild:coldZoneShapeNode];
+    
     [_suns addObject:_sunNode];
 }
 
@@ -358,7 +389,6 @@
     }
 }
 
-
 //______________________________________________________________________________________________________________
 //|                                                                                                            |
 //|                                                                                                            |
@@ -389,7 +419,7 @@
                 int newPop = [_shipNode.userData[@"population"] intValue];
                 
                 if (([_shipNode.userData[@"isHot"] boolValue] == NO) && ([_shipNode.userData[@"isCold"] boolValue] == NO)){
-                    newPop -= 6;//change based on speed?
+                    newPop -= 2;//change based on speed?
                 }
                 else {
                     newPop -= 1;
@@ -414,7 +444,7 @@
                     [node.physicsBody applyForce: CGVectorMake(_newX, _newY)];
                     int newPop = [node.userData[@"population"] intValue];
                     if (([node.userData[@"isHot"] boolValue] == NO) && ([node.userData[@"isCold"] boolValue] == NO)){
-                        newPop -= 6;
+                        newPop -= 2;
                     }
                     else {
                         newPop -=1;
@@ -491,7 +521,7 @@
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
                 CGPoint direction = CGPointMake(offset.x / length, offset.y / length);
                 if (length < [thisBlackHole.userData[@"eventHorizon"] intValue]/2) {        //black holes only attract within certain distances
-                    [node.physicsBody applyForce: CGVectorMake(direction.x * 0.01 * size.width, direction.y * 0.01 * size.width )];
+                    [node.physicsBody applyForce: CGVectorMake(direction.x * 0.03 * size.width, direction.y * 0.03 * size.width )];
                 }
             }
         
@@ -499,26 +529,37 @@
             //|                                                                                                            |
             //|                                 burn up population if too close to sun                                     |
             //|____________________________________________________________________________________________________________|
-            for (int i = 0; i < [_suns count]; i++) {
-                SKSpriteNode * thisSun = _suns[i];
+        //    for (int i = 0; i < [_suns count]; i++) {
+            [node.userData setObject:[NSNumber numberWithInt:0] forKey:@"isHotCount"];
+            [_gameNode enumerateChildNodesWithName:@"sun" usingBlock:^(SKNode *thisSun, BOOL *stop) {
+                //SKSpriteNode * thisSun = _suns[i];
                 CGPoint point = thisSun.position;
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
                 if (length < [thisSun.userData[@"hotZoneMax"] intValue]/2) {
-                    [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isHot"];
+                    [node.userData setObject:[NSNumber numberWithInt:[node.userData[@"isHotCount"]intValue]+1] forKey:@"isHotCount"];
                 }
-                else {
-                    [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
-                }
-                if ([_suns count] == 1) {  //more than one cold zone overlapping hot zones doesn't make sense........
-                    if (length > [thisSun.userData[@"coldZone"] intValue]/2) {
-                        [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isCold"];
-                    }
-                    else {
-                        [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isCold"];
-                    }
-                }
+                //else {
+                //    [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
+                //}// FOR COLD..............
+//                if ([_suns count] == 1) {  //more than one cold zone overlapping hot zones doesn't make sense........
+//                    if (length > [thisSun.userData[@"coldZone"] intValue]/2) {
+//                        [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isCold"];
+//                    }
+//                    else {
+//                        [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isCold"];
+//                    }
+//                }
+            }];
+            
+            if ([node.userData[@"isHotCount"]intValue] > 0) {
+                [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isHot"];
             }
+            else {
+                [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
+            }
+            
+            //}
             //change colors
             if ( [node.userData[@"isHot"] boolValue] == YES) {
                 node.colorBlendFactor = 0.5;
@@ -581,6 +622,7 @@
     //|                                 REGENERATE POPULATION if EARTH can be controlled                           |
     //|____________________________________________________________________________________________________________|
     
+    //CHECK THIS
     if ( [_shipNode.userData[@"canControl"] boolValue] == YES )
     {
         if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] )  {
@@ -752,8 +794,71 @@
         newShape.lineWidth = 1;
         newShape.alpha = 0.5;
         _hotZoneShapes[i] = newShape;
-        _suns[i] = newSun;
+        _suns[i] = newSun;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
     }
+    //second shape node?
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape2 = _hotZoneShapes2[i];
+        SKSpriteNode * newSun2 = _suns[i];
+        CGPoint pos2 = newSun2.position;
+        float newHotZone2 = [newSun2.userData[@"hotZoneSize2"] floatValue];
+        float newHotMax2 = [newSun2.userData[@"hotZoneMax"] floatValue];
+
+        int newHotZoneInt2 = (int) newHotZone2;
+        int newHotMaxInt2 = (int) newHotMax2;
+        
+        if (newHotZoneInt2 < newHotMaxInt2+3) {
+            newHotZone2 += (newHotMax2 - newHotZone2+25) * .05;
+            [newSun2.userData setObject:[NSNumber numberWithInt:newHotZone2] forKey:@"hotZoneSize2"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun2.userData setObject:[NSNumber numberWithFloat:newSun2.size.width] forKey:@"hotZoneSize2"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
+        hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
+        newShape2.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle2].CGPath;
+        newShape2.fillColor = nil;
+        newShape2.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
+        newShape2.antialiased = NO;
+        newShape2.lineWidth = 1;
+        newShape2.alpha = 0.5;
+        _hotZoneShapes2[i] = newShape2;
+        _suns[i] = newSun2;
+    }
+    //third shape node?
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape3 = _hotZoneShapes3[i];
+        SKSpriteNode * newSun3 = _suns[i];
+        CGPoint pos3 = newSun3.position;
+        float newHotZone3 = [newSun3.userData[@"hotZoneSize3"] floatValue];
+        float newHotMax3 = [newSun3.userData[@"hotZoneMax"] floatValue];
+        
+        int newHotZoneInt3 = (int) newHotZone3;
+        int newHotMaxInt3 = (int) newHotMax3;
+        
+        if (newHotZoneInt3 < newHotMaxInt3+3) {
+            newHotZone3 += (newHotMax3 - newHotZone3 + 25) * .05;
+            [newSun3.userData setObject:[NSNumber numberWithInt:newHotZone3] forKey:@"hotZoneSize3"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun3.userData setObject:[NSNumber numberWithFloat:newSun3.size.width] forKey:@"hotZoneSize3"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
+        hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
+        newShape3.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle3].CGPath;
+        newShape3.fillColor = nil;
+        newShape3.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
+        newShape3.antialiased = NO;
+        newShape3.lineWidth = 1;
+        newShape3.alpha = 0.5;
+        _hotZoneShapes3[i] = newShape3;
+        _suns[i] = newSun3;
+    }
+    
 }
 
 //______________________________________________________________________________________________________________
@@ -906,7 +1011,7 @@
 //this needs fixing. win method. currently generates a ton of nodes.
 -(void)win
 {
-    if (_currentLevel < 4) {
+    if (_currentLevel < 5) {
         _currentLevel ++;
     }
     NSLog(@"[win]");
@@ -966,7 +1071,7 @@
     levelGoalLabel.text = [NSString stringWithFormat:@"%d", _levelGoal];
     levelGoalLabel.horizontalAlignmentMode = SKLabelHorizontalAlignmentModeCenter;
     levelGoalLabel.fontSize = 160;
-    levelGoalLabel.fontColor = [SKColor colorWithRed:0.2 green:0.2 blue:0.2 alpha:1];
+    levelGoalLabel.fontColor = [SKColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:1];
     levelGoalLabel.position = CGPointMake(self.frame.size.width/2, 200);
     [_gameNode addChild:levelGoalLabel];
 
@@ -992,10 +1097,10 @@
     
     NSLog(@"%i", _levelGoal);
     
-    SKSpriteNode * _vignette = [SKSpriteNode spriteNodeWithImageNamed:@"vignette"];
-    _vignette.position = CGPointMake(self.size.width/2, self.size.height/2);
-    _vignette.size = CGSizeMake(self.size.width, self.size.height);
-    [_gameNode addChild:_vignette];
+//    SKSpriteNode * _vignette = [SKSpriteNode spriteNodeWithImageNamed:@"vignette"];
+//    _vignette.position = CGPointMake(self.size.width/2, self.size.height/2);
+//    _vignette.size = CGSizeMake(self.size.width, self.size.height);
+//    [_gameNode addChild:_vignette];
 }
 
 -(void)addEarthFromArray:(NSArray*)earthProperties
