@@ -22,7 +22,12 @@
 //bumping into stuff makes people fall off? twinkly stars to pick up?
 
 //Make population shrink in hot or cold zone, and make earth blend red and blue respectively, maybe add particle effect?
-// try to use the catnap design pattern to generate levels
+
+//add a lose state when the total remaining planets' max population doesn't reach the goal.
+
+//add a delay before losing
+
+//bug - sometimes touching a colony changes population to 1 and colony stays at 0 (might be a collision bug, might be something related to removing old nodes from parents?
 
 
 #import "BMAMyScene.h"
@@ -140,6 +145,7 @@
     [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
     [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
     [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isCold"];
+    [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isDestroyed"];
     
     //NSLog(@"population = %@", [_shipNode.userData valueForKey:@"population"]);
     //NSLog(@"earth population (by starting userData)= %i", [_shipNode.userData[@"population"] intValue]);
@@ -177,6 +183,7 @@
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isCold"];
+    [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isDestroyed"];
     
     //NSLog(@"colony population = %i", [_colonyPlanetNode.userData[@"population"] intValue]);
     //NSLog(@"colony max population = %@", [_colonyPlanetNode.userData valueForKey:@"maxPopulation"]);
@@ -200,6 +207,10 @@
     _asteroidNode.size = size;
     
     [_gameNode addChild:_asteroidNode];
+    
+    _asteroidNode.userData = [[NSMutableDictionary alloc] init];
+
+    [_asteroidNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
     
     _asteroidNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: (size.width/2)];
     _asteroidNode.physicsBody.categoryBitMask = PhysicsCategoryAsteroid;
@@ -247,16 +258,7 @@
     
     //CERTAIN KINDS OF SUNS GROW WHEN THEY SWALLOW MASS? THEY CAN BECOME A BLACK HOLE OR EXPLODE?
     //will need to have a 'resting state?' or natural lifecycle?
-    
-    /*CGRect eventHorizCircle = CGRectMake(pos.x - (eventHoriz/2), pos.y - (eventHoriz/2), eventHoriz, eventHoriz);
-    SKShapeNode *eventHorizShapeNode = [[SKShapeNode alloc] init];
-    eventHorizShapeNode.path = [UIBezierPath bezierPathWithOvalInRect:eventHorizCircle].CGPath;
-    eventHorizShapeNode.fillColor = nil;
-    eventHorizShapeNode.strokeColor = [SKColor colorWithRed:1.00 green:1.0 blue:1.0 alpha:0.5];
-    eventHorizShapeNode.antialiased = NO;
-    eventHorizShapeNode.lineWidth = 0.8;
-    [_gameNode addChild:eventHorizShapeNode];
-    [_eventHorizonShapes addObject:eventHorizShapeNode]; */
+
     
     
     
@@ -350,8 +352,9 @@
     [_blackHoleNode runAction:[SKAction repeatActionForever:action]];
     [_gameNode addChild:_blackHoleNode];
     
-    float eventHoriz = size.width * 30;
+    float eventHoriz = size.width * 10;
     _blackHoleNode.userData = [[NSMutableDictionary alloc] init];
+    [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizonMax"];
     [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
     
     _blackHoleNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: size.width/2 ];
@@ -366,8 +369,10 @@
     eventHorizShapeNode.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:0.5];
     eventHorizShapeNode.antialiased = NO;
     eventHorizShapeNode.lineWidth = 1;
+    eventHorizShapeNode.name = @"eventHorizon";
     [_gameNode addChild:eventHorizShapeNode];
     [_eventHorizonShapes addObject:eventHorizShapeNode];
+    
 }
 
 
@@ -501,10 +506,19 @@
     //|____________________________________________________________________________________________________________|
     
     _newBlackHoles = [[NSMutableArray alloc]init];
+    
     [_gameNode enumerateChildNodesWithName:@"blackHole" usingBlock:^(SKNode *node, BOOL *stop) {
         [_newBlackHoles addObject:node];
     }];
     _blackHoles = _newBlackHoles;
+    
+    NSMutableArray *newEventHorizonShapes = [[NSMutableArray alloc]init];
+    
+    [_gameNode enumerateChildNodesWithName:@"eventHorizon" usingBlock:^(SKNode *node, BOOL *stop) {
+        [newEventHorizonShapes addObject:node];
+    }];
+    _eventHorizonShapes = newEventHorizonShapes;
+    
     for (SKSpriteNode * node in _gameNode.children)
     {
         //______________________________________________________________________________________________________________
@@ -520,27 +534,24 @@
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
                 CGPoint direction = CGPointMake(offset.x / length, offset.y / length);
-                if (length < [thisBlackHole.userData[@"eventHorizon"] intValue]/2) {        //black holes only attract within certain distances
+                if (length < [thisBlackHole.userData[@"eventHorizonMax"] intValue]/2) {        //black holes only attract within certain distances
                     [node.physicsBody applyForce: CGVectorMake(direction.x * 0.03 * size.width, direction.y * 0.03 * size.width )];
                 }
             }
-        
+        }
             //______________________________________________________________________________________________________________
             //|                                                                                                            |
-            //|                                 burn up population if too close to sun                                     |
+            //|                                 BURN up population if too close to sun                                     |
             //|____________________________________________________________________________________________________________|
-        //    for (int i = 0; i < [_suns count]; i++) {
+        if (node.physicsBody.categoryBitMask == PhysicsCategoryControlColony | node.physicsBody.categoryBitMask == PhysicsCategoryShip | node.physicsBody.categoryBitMask == PhysicsCategoryColony | node.physicsBody.categoryBitMask == PhysicsCategoryAsteroid) {
             [node.userData setObject:[NSNumber numberWithInt:0] forKey:@"isHotCount"];
             [_gameNode enumerateChildNodesWithName:@"sun" usingBlock:^(SKNode *thisSun, BOOL *stop) {
-                //SKSpriteNode * thisSun = _suns[i];
                 CGPoint point = thisSun.position;
                 CGPoint offset = CGPointMake(point.x - node.position.x, point.y - node.position.y);
                 CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
-                if (length < [thisSun.userData[@"hotZoneMax"] intValue]/2) {
+                if (length < [thisSun.userData[@"hotZoneMax"] intValue]/2 + node.size.width/2) {
                     [node.userData setObject:[NSNumber numberWithInt:[node.userData[@"isHotCount"]intValue]+1] forKey:@"isHotCount"];
                 }
-                //else {
-                //    [node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
                 //}// FOR COLD..............
 //                if ([_suns count] == 1) {  //more than one cold zone overlapping hot zones doesn't make sense........
 //                    if (length > [thisSun.userData[@"coldZone"] intValue]/2) {
@@ -588,6 +599,9 @@
     if (([_shipNode.userData[@"canControl"] boolValue] == NO ) && ([_shipNode.userData[@"isHot"]boolValue] == YES)){
         earthLose++;
     }
+    if ([_shipNode.userData[@"isDestroyed"] boolValue] == YES ) {
+        earthLose++;
+    }
     
     __block int coloniesLose = 0;
     __block int coloniesNum = 0;
@@ -599,6 +613,9 @@
             _totalPopulation += colonyPopulation;
         }
         if (( [node.userData[@"canControl"] boolValue] == NO ) && ([node.userData[@"isHot"]boolValue] == YES)){
+            coloniesLose++;
+        }
+        if ([node.userData[@"isDestroyed"] boolValue] == YES)  {
             coloniesLose++;
         }
     }];
@@ -859,6 +876,38 @@
         _suns[i] = newSun3;
     }
     
+    //animates black hole event horizons
+    for (int i = 0; i < [_blackHoles count]; i++) {
+        SKShapeNode * newShape = _eventHorizonShapes[i];
+        SKSpriteNode * newBlackHole = _blackHoles[i];
+        CGPoint pos = newBlackHole.position;
+        float newEventHorizon = [newBlackHole.userData[@"eventHorizon"] floatValue];
+        float newEventHorizonMax = [newBlackHole.userData[@"eventHorizonMax"] floatValue];
+        
+        int newEventHorizonInt = (int) newEventHorizon;
+        //int newEventHorizonMaxInt = (int) newEventHorizonMax;
+        
+        if (newEventHorizonInt > newBlackHole.size.width) {
+            newEventHorizon -= (newBlackHole.size.width + newEventHorizon) * .01;
+            [newBlackHole.userData setObject:[NSNumber numberWithInt:newEventHorizon] forKey:@"eventHorizon"];
+        }
+        else {
+            [newBlackHole.userData setObject:[NSNumber numberWithFloat:newEventHorizonMax] forKey:@"eventHorizon"];
+        }
+        CGRect hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
+        hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
+        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+        newShape.fillColor = nil;
+        newShape.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1];
+        newShape.antialiased = NO;
+        newShape.lineWidth = 1;
+        newShape.alpha = 0.5;
+        _eventHorizonShapes[i] = newShape;
+        _blackHoles[i] = newBlackHole;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
+    }
+    
+    
+    
 }
 
 //______________________________________________________________________________________________________________
@@ -896,11 +945,11 @@
             [contact.bodyB.node removeFromParent];
             [_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
         }
-        NSLog(@"sun grows");
+        //NSLog(@"sun grows");
         //ENTER MYSTERY CODE HERE! contact.bodyB.node.size is no good.
         //[contact.bodyB.node setScale:2.0];
-        CGFloat absorbMass = contact.bodyA.node.frame.size.width * 0.01; //THIS SORT OF WORKS BUT I WANTED MASS
-        NSLog(@"width: %f", absorbMass);
+        //CGFloat absorbMass = contact.bodyA.node.frame.size.width * 0.01; //THIS SORT OF WORKS BUT I WANTED MASS
+        //NSLog(@"width: %f", absorbMass);
         //SKAction *grow = [SKAction scaleTo:1.0+absorbMass duration:3.0]; //THIS ISN'T REALLY WORKING THE WAY I WANT IT TO, ESP WHEN IT STACKS
        // SKAction *wait = [SKAction waitForDuration:5.0];
         //SKAction *shrink = [SKAction scaleTo:1.0-absorbMass/2 duration:10.0]; //MATH ISN'T RIGHT FOR THE SHRINK
@@ -929,15 +978,23 @@
     //ship turning colony into control colony
     else if (collision == (PhysicsCategoryShip | PhysicsCategoryColony))
     {
-        contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
-        NSLog(@"New colony");
-        contact.bodyB.node.name = @"controlColony";
         int earthNewPop = [_shipNode.userData[@"population"] intValue];
         earthNewPop -= 20;
         [_shipNode.userData setObject:[NSNumber numberWithInt:earthNewPop] forKey:@"population"];
         int colonyNewPop = [_shipNode.userData[@"population"] intValue];
         colonyNewPop = 1;
-        [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
+        if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            contact.bodyA.categoryBitMask = PhysicsCategoryControlColony;
+            NSLog(@"New colony");
+            contact.bodyA.node.name = @"controlColony";
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
+        }
+        else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
+            NSLog(@"New colony");
+            contact.bodyB.node.name = @"controlColony";
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
+        }
     }
     
     //asteroid reducing population after impact
@@ -961,13 +1018,17 @@
     //Colony turning into control colony
     else if (collision == (PhysicsCategoryControlColony | PhysicsCategoryColony))
     {
-        contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
-        contact.bodyA.categoryBitMask = PhysicsCategoryControlColony;
+        if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            contact.bodyA.categoryBitMask = PhysicsCategoryControlColony;
+            contact.bodyA.node.name = @"controlColony";
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+        }
+        else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
+            contact.bodyB.node.name = @"controlColony";
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+        }
         NSLog(@"New colony");
-        contact.bodyB.node.name = @"controlColony";
-        contact.bodyA.node.name = @"controlColony";
-        [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
-        [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
     }
     
     //black hole force explosion and disappear
@@ -976,6 +1037,16 @@
         NSLog(@"black hole explode");
         for (SKSpriteNode *node in _gameNode.children)
         {
+            
+            /*for (int i = 0; i < [_blackHoles count]; i ++) {
+                if (contact.bodyA.node == _blackHoles[i]) {
+                    [_eventHorizonShapes[i] removeFromParent];
+                }
+                else if (contact.bodyB.node == _blackHoles[i]) {
+                    [_eventHorizonShapes[i] removeFromParent];
+                }
+            }*/
+            
             //probably need to add a conditional to take care of the bodyA/bodyB confusion.......
             CGPoint offset = CGPointMake(contact.bodyB.node.position.x - node.position.x, contact.bodyB.node.position.y - node.position.y);
             CGFloat length = sqrtf(offset.x * offset.x + offset.y * offset.y);
@@ -985,25 +1056,54 @@
         if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+//            for (int i = 0; i < [_blackHoles count]; i ++) {
+//                if (_blackHoles[i] == contact.bodyB.node) {
+//                    [_eventHorizonShapes[i] removeFromParent];
+//                }
+//            }
+            [contact.bodyA.node removeFromParent];
+            [contact.bodyB.node removeFromParent];
         }
         else if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+//            for (int i = 0; i < [_blackHoles count]; i ++) {
+//                if (_blackHoles[i] == contact.bodyB.node) {
+//                    [_eventHorizonShapes[i] removeFromParent];
+//                }
+//            }
+            [contact.bodyA.node removeFromParent];
+            [contact.bodyB.node removeFromParent];
         }
         else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryShip) {
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+//            for (int i = 0; i < [_blackHoles count]; i ++) {
+//                if (_blackHoles[i] == contact.bodyA.node) {
+//                    [_eventHorizonShapes[i] removeFromParent];
+//                }
+//            }
+            [contact.bodyA.node removeFromParent];
+            [contact.bodyB.node removeFromParent];
         }
-        if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
+        else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryControlColony) {
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+//            for (int i = 0; i < [_blackHoles count]; i ++) {
+//                if (_blackHoles[i] == contact.bodyA.node) {
+//                    [_eventHorizonShapes[i] removeFromParent];
+//                }
+//            }
+            [contact.bodyA.node removeFromParent];
+            [contact.bodyB.node removeFromParent];
         }
+        // THE ABOVE IS MY DESPERATE ATTEMPT TO MAKE BLACK HOLES RESULT IN A LEVEL-FAIL STATE .......... :(
         [contact.bodyA.node removeFromParent];
         [contact.bodyB.node removeFromParent];
-        [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
-        [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
-        
-        // THE ABOVE IS MY DESPERATE ATTEMPT TO MAKE BLACK HOLES RESULT IN A LEVEL-FAIL STATE .......... :(
     }
     
 }
@@ -1013,6 +1113,9 @@
 {
     if (_currentLevel < 5) {
         _currentLevel ++;
+    }
+    else {
+        _currentLevel = 1;
     }
     NSLog(@"[win]");
     //[_shipNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
