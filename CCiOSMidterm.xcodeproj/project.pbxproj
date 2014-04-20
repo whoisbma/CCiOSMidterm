@@ -43,6 +43,7 @@
 		8B955F6118E79BFA00C85C45 /* sun.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F5818E79BFA00C85C45 /* sun.png */; };
 		8B955F6318E7A28900C85C45 /* vignette.png in Resources */ = {isa = PBXBuildFile; fileRef = 8B955F6218E7A28900C85C45 /* vignette.png */; };
 		8BC8DC1918FCCBB500D4BB4D /* level1.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8BC8DC1818FCCBB500D4BB4D /* level1.plist */; };
+		8BD74CD31904778E00415EE7 /* BMATitleScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 8BD74CD21904778E00415EE7 /* BMATitleScene.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +105,8 @@
 		8B955F5818E79BFA00C85C45 /* sun.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = sun.png; sourceTree = "<group>"; };
 		8B955F6218E7A28900C85C45 /* vignette.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vignette.png; sourceTree = "<group>"; };
 		8BC8DC1818FCCBB500D4BB4D /* level1.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level1.plist; sourceTree = "<group>"; };
+		8BD74CD11904778E00415EE7 /* BMATitleScene.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BMATitleScene.h; sourceTree = "<group>"; };
+		8BD74CD21904778E00415EE7 /* BMATitleScene.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BMATitleScene.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +178,8 @@
 				8B955F1718E24E3000C85C45 /* BMAViewController.m */,
 				8B955F1918E24E3000C85C45 /* BMAMyScene.h */,
 				8B955F1A18E24E3000C85C45 /* BMAMyScene.m */,
+				8BD74CD11904778E00415EE7 /* BMATitleScene.h */,
+				8BD74CD21904778E00415EE7 /* BMATitleScene.m */,
 				8B955F3B18E253EE00C85C45 /* Physics.h */,
 				8B955F1C18E24E3000C85C45 /* Spaceship.png */,
 				8B955F1E18E24E3000C85C45 /* Images.xcassets */,
@@ -372,6 +377,7 @@
 			files = (
 				8B955F0E18E24E3000C85C45 /* main.m in Sources */,
 				8B955F4A18E2798C00C85C45 /* SKTAudio.m in Sources */,
+				8BD74CD31904778E00415EE7 /* BMATitleScene.m in Sources */,
 				8B955F1818E24E3000C85C45 /* BMAViewController.m in Sources */,
 				8B955F4818E2798C00C85C45 /* SKEmitterNode+SKTExtras.m in Sources */,
 				8B955F4B18E2798C00C85C45 /* SKTUtils.mm in Sources */,

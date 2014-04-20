@@ -54,6 +54,7 @@
     float _newY;
     //int _timer;
     int _totalPopulation;
+    int _totalPossiblePopulation;
     int _levelGoal;
     bool _levelOver;
     
@@ -356,6 +357,7 @@
     _blackHoleNode.userData = [[NSMutableDictionary alloc] init];
     [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizonMax"];
     [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
+    [_blackHoleNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isDestroyed"];
     
     _blackHoleNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius: size.width/2 ];
     _blackHoleNode.physicsBody.dynamic = NO;
@@ -497,6 +499,7 @@
 
 -(void)update:(CFTimeInterval)currentTime   /* Called before each frame is rendered */
 {
+    [self animateAllShapes];  //ANIMATE ALL SHAPE NODES FOR SUNS AND BLACK HOLES
     
     //NSLog(@"can control %d", [_shipNode.userData[@"canControl"]boolValue]);
     
@@ -634,289 +637,13 @@
         _levelOver = YES;
     }
     
-    //______________________________________________________________________________________________________________
-    //|                                                                                                            |
-    //|                                 REGENERATE POPULATION if EARTH can be controlled                           |
-    //|____________________________________________________________________________________________________________|
-    
-    //CHECK THIS
-    if ( [_shipNode.userData[@"canControl"] boolValue] == YES )
-    {
-        if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] )  {
-            if (([_shipNode.userData[@"isHot"] boolValue] == NO) && ([_shipNode.userData[@"isCold"] boolValue] == NO)){
-                int newPop = [_shipNode.userData[@"population"] intValue];
-                newPop += 1;
-                [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
-                //NSLog(@"added population");
-            }
-        }
-    }
-    //______________________________________________________________________________________________________________
-    //|                                                                                                            |
-    //|                                 or count down the timer until it can be controlled again                   |
-    //|____________________________________________________________________________________________________________|
-    else
-    { //if ( [_shipNode.userData[@"canControl"] boolValue] == NO ) {
-        if ( [_shipNode.userData[@"controlReturnCount"] intValue] > 0 ) {
-            int newCount = [_shipNode.userData[@"controlReturnCount"] intValue];
-            newCount --;
-            //NSLog(@"control return count = %i", [_shipNode.userData[@"controlReturnCount"] intValue]);
-            [_shipNode.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
-        } else {
-            [_shipNode.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
-            [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
-            //NSLog(@"control returned");
-        }
-    }
-    
-    //______________________________________________________________________________________________________________
-    //|                                                                                                            |
-    //|                                REGENERATE POPULATION if COLONY can be controlled                           |
-    //|____________________________________________________________________________________________________________|
-    
-    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
-        if ( [node.userData[@"canControl"] boolValue] == YES) {
-            if (([node.userData[@"population"] intValue] < [node.userData[@"maxPopulation"] intValue] )     ) {  //comment these two out if below
-                //   && ([node.userData[@"population"] intValue] >= 0 )){  //for testing no regeneration if below 0?  //SEE BELOW RE. NEW TYPE
-                if (([node.userData[@"isHot"] boolValue] == NO) && ([node.userData[@"isCold"] boolValue] == NO)){
-                    int newPop = [node.userData[@"population"] intValue];
-                    newPop += 1;
-                    [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
-                }
-            }
-        //______________________________________________________________________________________________________________
-        //|                                 or count down the timer until it can be controlled again                   |
-        //|____________________________________________________________________________________________________________|
-        } else { //if ( [node.userData[@"canControl"] boolValue] == NO ) {
-            if ( [node.userData[@"controlReturnCount"] intValue] > 0 ) {
-                int newCount = [node.userData[@"controlReturnCount"] intValue];
-                newCount --;
-                //NSLog(@"control return count = %i", [node.userData[@"controlReturnCount"] intValue]);
-                [node.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
-            } else {
-                [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
-                [node.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
-                //NSLog(@"colony planet control returned");
-            }
-        }
-         //MAYBE KEEP THE NO-REGEN PERIOD THING FOR ANOTHER TYPE OF COLONY.
-    }];
 
-    //______________________________________________________________________________________________________________
-    //|                                                                                                            |
-    //|                                 REPLACE EARTH POPULATION LABEL text value                                  |
-    //|____________________________________________________________________________________________________________|
-    _earthPopulationLabel.text = [NSString stringWithFormat:@"%i", [_shipNode.userData[@"population"] intValue] ];
     
-    //______________________________________________________________________________________________________________
-    //|                                                                                                            |
-    //|                                REPLACE COLONY POPULATION LABEL text value                                  |
-    //|____________________________________________________________________________________________________________|
-    for (int i = 0; i < [_populationLabels count]; i++)  // get all population labels
-    {
-        SKLabelNode * label = _populationLabels[i];   // make a new label equal to existing label  //KILL THESE NEW INITIALIZATIONS WITH A PRIVATE VAR?
-        SKSpriteNode * newColony = _colonyPlanets[i];  //make a new colony planet equal to existing planet
-        label.text = [NSString stringWithFormat:@"%i", [newColony.userData[@"population"] intValue]];  // replace label text of new label
-        _populationLabels[i] = label;   //replace the old label with the new label
-    }
-    
-    /*
-    //--------------------------------------------------------------------------------------------------------------------
-    //BELOW IS TO MAKE THE EVENT HORIZON GROW WHEN THE SUN CHANGES SHAPE, ETC.  (would need to add logic for the new black hole approach too)
-    //--------------------------------------------------------------------------------------------------------------------
-    for (int i = 0; i <[_eventHorizonShapes count]; i++) {
-        SKShapeNode * currentShape = _eventHorizonShapes[i];
-        SKSpriteNode * newSun = _suns[i];
-        float newEventHoriz = newSun.size.width * 3;        //THIS IS THE PROBLEM- THE SIZE VALUE ISN'T BEING CHANGED, JUST THE SCALE THROUGH AN SKACTION
-        CGPoint newPos = newSun.position;
-        newEventHoriz = [newSun.userData[@"eventHorizon"] intValue]; //ALSO THE NEW VALUE WILL NEED TO GET CYCLED BACK INTO THE USER DATA KEY IN ORDER TO READ IT ELSEWHERE (FOR DETECTIONS ETC
-
-        CGRect circle = CGRectMake(newPos.x - (newEventHoriz/2), newSun.position.y - (newEventHoriz/2), newEventHoriz, newEventHoriz);
-        currentShape.path = [UIBezierPath bezierPathWithOvalInRect:circle].CGPath;
-        currentShape.fillColor = nil;
-        currentShape.strokeColor = SKColor.whiteColor;
-        currentShape.antialiased = NO;
-        currentShape.lineWidth = 0.8;
-        _eventHorizonShapes[i] = currentShape;
-    }
-    //DO MORE FOR THE HOT ZONE AND COLD ZONE ONCE IT IS WORKING  */
-    
-    
-    
-    /* //the attempt to animate an array of shapenodes for each sun. it sort of works but all insane............
-    for (int i = 0; i < [_suns count]; i++) {
-        SKSpriteNode * newSun = _suns[i];
-        CGPoint pos = newSun.position;
-        float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
-        float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
-        NSMutableArray * newSingleSunHotZoneShapeNodes = [[NSMutableArray alloc] init];
-        newSingleSunHotZoneShapeNodes = _hotZoneShapes[i];
-        for (int j = 0; j < [newSingleSunHotZoneShapeNodes count]; j++) {
-            SKShapeNode * newShape = newSingleSunHotZoneShapeNodes[j];
-            
-            int newHotZoneInt = (int) newHotZone;
-            int newHotMaxInt = (int) newHotMax;
-        
-            if (newHotZoneInt < newHotMaxInt) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
-            newHotZone +=10;
-                [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
-            }
-            else {
-                //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-                [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
-                //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-            }
-            CGRect hotZoneCircle = CGRectMake(pos.x - ((newHotZone+j*(newSun.size.width/10))/2), pos.y - ((newHotZone+j*(newSun.size.width/10))/2), newHotZone+j*(newSun.size.width/10), newHotZone+j*(newSun.size.width/10));
-            newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
-            newShape.fillColor = nil;
-            newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
-            newShape.antialiased = NO;
-            newShape.lineWidth = 1;
-            newSingleSunHotZoneShapeNodes[j] = newShape;
-        }
-        _hotZoneShapes[i] = newSingleSunHotZoneShapeNodes;
-        _suns[i] = newSun;
-    }*/
-    
-    //animates a single sun shape node
-    for (int i = 0; i < [_suns count]; i++) {
-        SKShapeNode * newShape = _hotZoneShapes[i];
-        SKSpriteNode * newSun = _suns[i];
-        CGPoint pos = newSun.position;
-        float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
-        float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
-        //NSLog(@"incrementing hot zone size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-        //NSLog(@"new hot zone: %f", newHotZone);
-        //NSLog(@"hot zone max: %f", [newSun.userData[@"HotZoneMax"]floatValue]);
-        //if ([newSun.userData[@"HotZoneGrow"]boolValue] == YES) {  ///NEED TO ADD THIS DICTIONARY KEY
-        
-        int newHotZoneInt = (int) newHotZone;
-        int newHotMaxInt = (int) newHotMax;
-        
-        if (newHotZoneInt < newHotMaxInt+3) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
-            newHotZone += (newHotMax -newHotZone+25) * .05;
-            [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
-        }
-        else {
-            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-            [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
-            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-        }
-        CGRect hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
-        hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
-        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
-        newShape.fillColor = nil;
-        newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
-        newShape.antialiased = NO;
-        newShape.lineWidth = 1;
-        newShape.alpha = 0.5;
-        _hotZoneShapes[i] = newShape;
-        _suns[i] = newSun;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
-    }
-    //second shape node?
-    for (int i = 0; i < [_suns count]; i++) {
-        SKShapeNode * newShape2 = _hotZoneShapes2[i];
-        SKSpriteNode * newSun2 = _suns[i];
-        CGPoint pos2 = newSun2.position;
-        float newHotZone2 = [newSun2.userData[@"hotZoneSize2"] floatValue];
-        float newHotMax2 = [newSun2.userData[@"hotZoneMax"] floatValue];
-
-        int newHotZoneInt2 = (int) newHotZone2;
-        int newHotMaxInt2 = (int) newHotMax2;
-        
-        if (newHotZoneInt2 < newHotMaxInt2+3) {
-            newHotZone2 += (newHotMax2 - newHotZone2+25) * .05;
-            [newSun2.userData setObject:[NSNumber numberWithInt:newHotZone2] forKey:@"hotZoneSize2"];
-        }
-        else {
-            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-            [newSun2.userData setObject:[NSNumber numberWithFloat:newSun2.size.width] forKey:@"hotZoneSize2"];
-            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-        }
-        CGRect hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
-        hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
-        newShape2.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle2].CGPath;
-        newShape2.fillColor = nil;
-        newShape2.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
-        newShape2.antialiased = NO;
-        newShape2.lineWidth = 1;
-        newShape2.alpha = 0.5;
-        _hotZoneShapes2[i] = newShape2;
-        _suns[i] = newSun2;
-    }
-    //third shape node?
-    for (int i = 0; i < [_suns count]; i++) {
-        SKShapeNode * newShape3 = _hotZoneShapes3[i];
-        SKSpriteNode * newSun3 = _suns[i];
-        CGPoint pos3 = newSun3.position;
-        float newHotZone3 = [newSun3.userData[@"hotZoneSize3"] floatValue];
-        float newHotMax3 = [newSun3.userData[@"hotZoneMax"] floatValue];
-        
-        int newHotZoneInt3 = (int) newHotZone3;
-        int newHotMaxInt3 = (int) newHotMax3;
-        
-        if (newHotZoneInt3 < newHotMaxInt3+3) {
-            newHotZone3 += (newHotMax3 - newHotZone3 + 25) * .05;
-            [newSun3.userData setObject:[NSNumber numberWithInt:newHotZone3] forKey:@"hotZoneSize3"];
-        }
-        else {
-            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-            [newSun3.userData setObject:[NSNumber numberWithFloat:newSun3.size.width] forKey:@"hotZoneSize3"];
-            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
-        }
-        CGRect hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
-        hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
-        newShape3.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle3].CGPath;
-        newShape3.fillColor = nil;
-        newShape3.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
-        newShape3.antialiased = NO;
-        newShape3.lineWidth = 1;
-        newShape3.alpha = 0.5;
-        _hotZoneShapes3[i] = newShape3;
-        _suns[i] = newSun3;
-    }
-    
-    //animates black hole event horizons
-    for (int i = 0; i < [_blackHoles count]; i++) {
-        SKShapeNode * newShape = _eventHorizonShapes[i];
-        SKSpriteNode * newBlackHole = _blackHoles[i];
-        CGPoint pos = newBlackHole.position;
-        float newEventHorizon = [newBlackHole.userData[@"eventHorizon"] floatValue];
-        float newEventHorizonMax = [newBlackHole.userData[@"eventHorizonMax"] floatValue];
-        
-        int newEventHorizonInt = (int) newEventHorizon;
-        //int newEventHorizonMaxInt = (int) newEventHorizonMax;
-        
-        if (newEventHorizonInt > newBlackHole.size.width) {
-            newEventHorizon -= (newBlackHole.size.width + newEventHorizon) * .01;
-            [newBlackHole.userData setObject:[NSNumber numberWithInt:newEventHorizon] forKey:@"eventHorizon"];
-        }
-        else {
-            [newBlackHole.userData setObject:[NSNumber numberWithFloat:newEventHorizonMax] forKey:@"eventHorizon"];
-        }
-        CGRect hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
-        hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
-        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
-        newShape.fillColor = nil;
-        newShape.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1];
-        newShape.antialiased = NO;
-        newShape.lineWidth = 1;
-        newShape.alpha = 0.5;
-        _eventHorizonShapes[i] = newShape;
-        _blackHoles[i] = newBlackHole;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
-    }
-    
-    
-    
+    [self updatePopulations];
+    [self updateLabelNodes];
 }
 
-//______________________________________________________________________________________________________________
-//|                                                                                                            |
-//|                                                                                                            |
-//|                                   D I D  S I M U L A T E  P H Y S I C S                                    |
-//|                                                                                                            |
-//|____________________________________________________________________________________________________________|
-
+// CALLED JUST AFTER PHYSICS GET SIMULATED
 - (void)didSimulatePhysics  /* called just after physics get simulated */
 {
 
@@ -924,13 +651,7 @@
 }
 
 
-//______________________________________________________________________________________________________________
-//|                                                                                                            |
-//|                                                                                                            |
-//|                                        C O L L I S I O N  L O O P                                          |
-//|                                                                                                            |
-//|____________________________________________________________________________________________________________|
-
+// COLLISION LOOP
 - (void)didBeginContact:(SKPhysicsContact *) contact
 {
     uint32_t collision = (contact.bodyA.categoryBitMask | contact.bodyB.categoryBitMask);
@@ -1038,14 +759,14 @@
         for (SKSpriteNode *node in _gameNode.children)
         {
             
-            /*for (int i = 0; i < [_blackHoles count]; i ++) {
+            for (int i = 0; i < [_blackHoles count]; i ++) {
                 if (contact.bodyA.node == _blackHoles[i]) {
                     [_eventHorizonShapes[i] removeFromParent];
                 }
                 else if (contact.bodyB.node == _blackHoles[i]) {
                     [_eventHorizonShapes[i] removeFromParent];
                 }
-            }*/
+            }
             
             //probably need to add a conditional to take care of the bodyA/bodyB confusion.......
             CGPoint offset = CGPointMake(contact.bodyB.node.position.x - node.position.x, contact.bodyB.node.position.y - node.position.y);
@@ -1057,6 +778,7 @@
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
 //            for (int i = 0; i < [_blackHoles count]; i ++) {
 //                if (_blackHoles[i] == contact.bodyB.node) {
 //                    [_eventHorizonShapes[i] removeFromParent];
@@ -1069,6 +791,7 @@
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+            [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
 //            for (int i = 0; i < [_blackHoles count]; i ++) {
 //                if (_blackHoles[i] == contact.bodyB.node) {
 //                    [_eventHorizonShapes[i] removeFromParent];
@@ -1081,6 +804,7 @@
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
 //            for (int i = 0; i < [_blackHoles count]; i ++) {
 //                if (_blackHoles[i] == contact.bodyA.node) {
 //                    [_eventHorizonShapes[i] removeFromParent];
@@ -1093,6 +817,7 @@
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"isDestroyed"];
 //            for (int i = 0; i < [_blackHoles count]; i ++) {
 //                if (_blackHoles[i] == contact.bodyA.node) {
 //                    [_eventHorizonShapes[i] removeFromParent];
@@ -1102,13 +827,16 @@
             [contact.bodyB.node removeFromParent];
         }
         // THE ABOVE IS MY DESPERATE ATTEMPT TO MAKE BLACK HOLES RESULT IN A LEVEL-FAIL STATE .......... :(
+        //it seems to work now that i use the isDestroyed logic above
         [contact.bodyA.node removeFromParent];
         [contact.bodyB.node removeFromParent];
     }
     
 }
 
-//this needs fixing. win method. currently generates a ton of nodes.
+
+// Update to new level, display win message
+// Needs some subtlety and additional options/messages
 -(void)win
 {
     if (_currentLevel < 5) {
@@ -1129,6 +857,8 @@
         [SKAction performSelector:@selector(newGame) onTarget:self]]]];
 }
 
+// Restart level, display message
+// Needs similar update to win
 -(void)lose
 {
     NSLog(@"lose");
@@ -1139,6 +869,7 @@
         [SKAction performSelector:@selector(newGame) onTarget:self]]]];
 }
 
+// Called every time a new level starts, removes gamenode children and runs setupLevel
 -(void)newGame
 {
     [_gameNode removeAllChildren];  //remove all sprites from _gameNode
@@ -1161,7 +892,7 @@
 }
 
 //getting level stuff from the plist
--(void) setupLevel:(int)levelNum
+-(void)setupLevel:(int)levelNum
 {
     _levelOver = NO;
     NSString *fileName = [NSString stringWithFormat:@"level%i", levelNum];
@@ -1206,6 +937,7 @@
 //    [_gameNode addChild:_vignette];
 }
 
+//for setupLevel, grabs from plist
 -(void)addEarthFromArray:(NSArray*)earthProperties
 {
     for (NSDictionary *earth in earthProperties) {
@@ -1217,6 +949,7 @@
     }
 }
 
+//for setupLevel, grabs from plist
 -(void)addSunsFromArray:(NSArray*)suns
 {
     for (NSDictionary *sun in suns) {
@@ -1227,6 +960,7 @@
     }
 }
 
+//for setupLevel, grabs from plist
 -(void)addAsteroidsFromArray:(NSArray*)asteroids
 {
     for (NSDictionary *asteroid in asteroids) {
@@ -1237,6 +971,7 @@
     }
 }
 
+//for setupLevel, grabs from plist
 -(void)addColoniesFromArray:(NSArray*)colonies
 {
     for (NSDictionary *colony in colonies) {
@@ -1247,6 +982,7 @@
     }
 }
 
+//for setupLevel, grabs from plist
 -(void)addBlackHolesFromArray:(NSArray*)blackHoles
 {
     for (NSDictionary *blackHole in blackHoles) {
@@ -1256,5 +992,295 @@
         NSLog(@"addBlackHolesFromArray");
     }
 }
+
+//updates the userData population key of all the nodes with any population
+-(void)updatePopulations
+{
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                                 REGENERATE POPULATION if EARTH can be controlled                           |
+    //|____________________________________________________________________________________________________________|
+    
+    //CHECK THIS
+    if ( [_shipNode.userData[@"canControl"] boolValue] == YES )
+    {
+        if ( [_shipNode.userData[@"population"] intValue] < [_shipNode.userData[@"maxPopulation"] intValue] )  {
+            if (([_shipNode.userData[@"isHot"] boolValue] == NO) && ([_shipNode.userData[@"isCold"] boolValue] == NO)){
+                int newPop = [_shipNode.userData[@"population"] intValue];
+                newPop += 1;
+                [_shipNode.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                //NSLog(@"added population");
+            }
+        }
+    }
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                                 or count down the timer until it can be controlled again                   |
+    //|____________________________________________________________________________________________________________|
+    else
+    { //if ( [_shipNode.userData[@"canControl"] boolValue] == NO ) {
+        if ( [_shipNode.userData[@"controlReturnCount"] intValue] > 0 ) {
+            int newCount = [_shipNode.userData[@"controlReturnCount"] intValue];
+            newCount --;
+            //NSLog(@"control return count = %i", [_shipNode.userData[@"controlReturnCount"] intValue]);
+            [_shipNode.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
+        } else {
+            [_shipNode.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+            [_shipNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
+            //NSLog(@"control returned");
+        }
+    }
+    
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                                REGENERATE POPULATION if COLONY can be controlled                           |
+    //|____________________________________________________________________________________________________________|
+    
+    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        if ( [node.userData[@"canControl"] boolValue] == YES) {
+            if (([node.userData[@"population"] intValue] < [node.userData[@"maxPopulation"] intValue] )     ) {  //comment these two out if below
+                //   && ([node.userData[@"population"] intValue] >= 0 )){  //for testing no regeneration if below 0?  //SEE BELOW RE. NEW TYPE
+                if (([node.userData[@"isHot"] boolValue] == NO) && ([node.userData[@"isCold"] boolValue] == NO)){
+                    int newPop = [node.userData[@"population"] intValue];
+                    newPop += 1;
+                    [node.userData setObject:[NSNumber numberWithInt:newPop] forKey:@"population"];
+                }
+            }
+            //______________________________________________________________________________________________________________
+            //|                                 or count down the timer until it can be controlled again                   |
+            //|____________________________________________________________________________________________________________|
+        } else { //if ( [node.userData[@"canControl"] boolValue] == NO ) {
+            if ( [node.userData[@"controlReturnCount"] intValue] > 0 ) {
+                int newCount = [node.userData[@"controlReturnCount"] intValue];
+                newCount --;
+                //NSLog(@"control return count = %i", [node.userData[@"controlReturnCount"] intValue]);
+                [node.userData setObject:[NSNumber numberWithInt:newCount] forKey:@"controlReturnCount"];
+            } else {
+                [node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
+                [node.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
+                //NSLog(@"colony planet control returned");
+            }
+        }
+        //MAYBE KEEP THE NO-REGEN PERIOD THING FOR ANOTHER TYPE OF COLONY.
+    }];
+}
+
+// updates the population label nodes on the planets
+// this will need to have other label nodes at some point or maybe replaced entirely by another visual system
+-(void)updateLabelNodes
+{
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                                 REPLACE EARTH POPULATION LABEL text value                                  |
+    //|____________________________________________________________________________________________________________|
+    _earthPopulationLabel.text = [NSString stringWithFormat:@"%i", [_shipNode.userData[@"population"] intValue] ];
+    
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                                REPLACE COLONY POPULATION LABEL text value                                  |
+    //|____________________________________________________________________________________________________________|
+    for (int i = 0; i < [_populationLabels count]; i++)  // get all population labels
+    {
+        SKLabelNode * label = _populationLabels[i];   // make a new label equal to existing label  //KILL THESE NEW INITIALIZATIONS WITH A PRIVATE VAR?
+        SKSpriteNode * newColony = _colonyPlanets[i];  //make a new colony planet equal to existing planet
+        label.text = [NSString stringWithFormat:@"%i", [newColony.userData[@"population"] intValue]];  // replace label text of new label
+        _populationLabels[i] = label;   //replace the old label with the new label
+    }
+    
+}
+
+-(void)animateAllShapes
+{
+    //______________________________________________________________________________________________________________
+    //|                                                                                                            |
+    //|                       make all shapes (event horizon, sun heat) update and animate                         |
+    //|____________________________________________________________________________________________________________|
+    /*
+     for (int i = 0; i <[_eventHorizonShapes count]; i++) {
+     SKShapeNode * currentShape = _eventHorizonShapes[i];
+     SKSpriteNode * newSun = _suns[i];
+     float newEventHoriz = newSun.size.width * 3;        //THIS IS THE PROBLEM- THE SIZE VALUE ISN'T BEING CHANGED, JUST THE SCALE THROUGH AN SKACTION
+     CGPoint newPos = newSun.position;
+     newEventHoriz = [newSun.userData[@"eventHorizon"] intValue]; //ALSO THE NEW VALUE WILL NEED TO GET CYCLED BACK INTO THE USER DATA KEY IN ORDER TO READ IT ELSEWHERE (FOR DETECTIONS ETC
+     
+     CGRect circle = CGRectMake(newPos.x - (newEventHoriz/2), newSun.position.y - (newEventHoriz/2), newEventHoriz, newEventHoriz);
+     currentShape.path = [UIBezierPath bezierPathWithOvalInRect:circle].CGPath;
+     currentShape.fillColor = nil;
+     currentShape.strokeColor = SKColor.whiteColor;
+     currentShape.antialiased = NO;
+     currentShape.lineWidth = 0.8;
+     _eventHorizonShapes[i] = currentShape;
+     }
+     //DO MORE FOR THE HOT ZONE AND COLD ZONE ONCE IT IS WORKING  */
+    
+    /* //the attempt to animate an array of shapenodes for each sun. it sort of works but all insane............
+     for (int i = 0; i < [_suns count]; i++) {
+     SKSpriteNode * newSun = _suns[i];
+     CGPoint pos = newSun.position;
+     float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
+     float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
+     NSMutableArray * newSingleSunHotZoneShapeNodes = [[NSMutableArray alloc] init];
+     newSingleSunHotZoneShapeNodes = _hotZoneShapes[i];
+     for (int j = 0; j < [newSingleSunHotZoneShapeNodes count]; j++) {
+     SKShapeNode * newShape = newSingleSunHotZoneShapeNodes[j];
+     
+     int newHotZoneInt = (int) newHotZone;
+     int newHotMaxInt = (int) newHotMax;
+     
+     if (newHotZoneInt < newHotMaxInt) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
+     newHotZone +=10;
+     [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
+     }
+     else {
+     //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+     [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
+     //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+     }
+     CGRect hotZoneCircle = CGRectMake(pos.x - ((newHotZone+j*(newSun.size.width/10))/2), pos.y - ((newHotZone+j*(newSun.size.width/10))/2), newHotZone+j*(newSun.size.width/10), newHotZone+j*(newSun.size.width/10));
+     newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+     newShape.fillColor = nil;
+     newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:0.5];
+     newShape.antialiased = NO;
+     newShape.lineWidth = 1;
+     newSingleSunHotZoneShapeNodes[j] = newShape;
+     }
+     _hotZoneShapes[i] = newSingleSunHotZoneShapeNodes;
+     _suns[i] = newSun;
+     }*/
+    
+    //animates a single sun shape node
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape = _hotZoneShapes[i];
+        SKSpriteNode * newSun = _suns[i];
+        CGPoint pos = newSun.position;
+        float newHotZone = [newSun.userData[@"hotZoneSize"] floatValue];
+        float newHotMax = [newSun.userData[@"hotZoneMax"] floatValue];
+        //NSLog(@"incrementing hot zone size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        //NSLog(@"new hot zone: %f", newHotZone);
+        //NSLog(@"hot zone max: %f", [newSun.userData[@"HotZoneMax"]floatValue]);
+        //if ([newSun.userData[@"HotZoneGrow"]boolValue] == YES) {  ///NEED TO ADD THIS DICTIONARY KEY
+        
+        int newHotZoneInt = (int) newHotZone;
+        int newHotMaxInt = (int) newHotMax;
+        
+        if (newHotZoneInt < newHotMaxInt+3) {//[newSun.userData[@"hotZoneMax"]floatValue]) {
+            newHotZone += (newHotMax -newHotZone+25) * .05;
+            [newSun.userData setObject:[NSNumber numberWithInt:newHotZone] forKey:@"hotZoneSize"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun.userData setObject:[NSNumber numberWithFloat:newSun.size.width] forKey:@"hotZoneSize"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
+        hotZoneCircle = CGRectMake(pos.x - (newHotZone/2), pos.y - (newHotZone/2), newHotZone, newHotZone);
+        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+        newShape.fillColor = nil;
+        newShape.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
+        newShape.antialiased = NO;
+        newShape.lineWidth = 1;
+        newShape.alpha = 0.5;
+        _hotZoneShapes[i] = newShape;
+        _suns[i] = newSun;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
+    }
+    //second shape node?
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape2 = _hotZoneShapes2[i];
+        SKSpriteNode * newSun2 = _suns[i];
+        CGPoint pos2 = newSun2.position;
+        float newHotZone2 = [newSun2.userData[@"hotZoneSize2"] floatValue];
+        float newHotMax2 = [newSun2.userData[@"hotZoneMax"] floatValue];
+        
+        int newHotZoneInt2 = (int) newHotZone2;
+        int newHotMaxInt2 = (int) newHotMax2;
+        
+        if (newHotZoneInt2 < newHotMaxInt2+3) {
+            newHotZone2 += (newHotMax2 - newHotZone2+25) * .05;
+            [newSun2.userData setObject:[NSNumber numberWithInt:newHotZone2] forKey:@"hotZoneSize2"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun2.userData setObject:[NSNumber numberWithFloat:newSun2.size.width] forKey:@"hotZoneSize2"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
+        hotZoneCircle2 = CGRectMake(pos2.x - (newHotZone2/2), pos2.y - (newHotZone2/2), newHotZone2, newHotZone2);
+        newShape2.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle2].CGPath;
+        newShape2.fillColor = nil;
+        newShape2.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
+        newShape2.antialiased = NO;
+        newShape2.lineWidth = 1;
+        newShape2.alpha = 0.5;
+        _hotZoneShapes2[i] = newShape2;
+        _suns[i] = newSun2;
+    }
+    //third shape node?
+    for (int i = 0; i < [_suns count]; i++) {
+        SKShapeNode * newShape3 = _hotZoneShapes3[i];
+        SKSpriteNode * newSun3 = _suns[i];
+        CGPoint pos3 = newSun3.position;
+        float newHotZone3 = [newSun3.userData[@"hotZoneSize3"] floatValue];
+        float newHotMax3 = [newSun3.userData[@"hotZoneMax"] floatValue];
+        
+        int newHotZoneInt3 = (int) newHotZone3;
+        int newHotMaxInt3 = (int) newHotMax3;
+        
+        if (newHotZoneInt3 < newHotMaxInt3+3) {
+            newHotZone3 += (newHotMax3 - newHotZone3 + 25) * .05;
+            [newSun3.userData setObject:[NSNumber numberWithInt:newHotZone3] forKey:@"hotZoneSize3"];
+        }
+        else {
+            //NSLog(@"here's the old size- %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+            [newSun3.userData setObject:[NSNumber numberWithFloat:newSun3.size.width] forKey:@"hotZoneSize3"];
+            //NSLog(@"here should be the new size - %f", [newSun.userData[@"hotZoneSize"]floatValue]);
+        }
+        CGRect hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
+        hotZoneCircle3 = CGRectMake(pos3.x - (newHotZone3/2), pos3.y - (newHotZone3/2), newHotZone3, newHotZone3);
+        newShape3.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle3].CGPath;
+        newShape3.fillColor = nil;
+        newShape3.strokeColor = [SKColor colorWithRed:1.0 green:0.0 blue:0.0 alpha:1];
+        newShape3.antialiased = NO;
+        newShape3.lineWidth = 1;
+        newShape3.alpha = 0.5;
+        _hotZoneShapes3[i] = newShape3;
+        _suns[i] = newSun3;
+    }
+    
+    //animates black hole event horizons
+    for (int i = 0; i < [_blackHoles count]; i++) {
+        SKShapeNode * newShape = _eventHorizonShapes[i];
+        SKSpriteNode * newBlackHole = _blackHoles[i];
+        CGPoint pos = newBlackHole.position;
+        float newEventHorizon = [newBlackHole.userData[@"eventHorizon"] floatValue];
+        float newEventHorizonMax = [newBlackHole.userData[@"eventHorizonMax"] floatValue];
+        
+        int newEventHorizonInt = (int) newEventHorizon;
+//        if ([newBlackHole.userData[@"isDestroyed"] boolValue] == NO ) {
+            if (newEventHorizonInt > newBlackHole.size.width) {
+                newEventHorizon -= (newBlackHole.size.width + newEventHorizon) * .01;
+                [newBlackHole.userData setObject:[NSNumber numberWithInt:newEventHorizon] forKey:@"eventHorizon"];
+            }
+            else {
+                [newBlackHole.userData setObject:[NSNumber numberWithFloat:newEventHorizonMax] forKey:@"eventHorizon"];
+            }
+//        }
+//        else {
+//            [newBlackHole removeFromParent];
+//            newEventHorizon += (newBlackHole.size.width + newEventHorizon) * .01;
+//            [newBlackHole.userData setObject:[NSNumber numberWithInt:1000] forKey:@"eventHorizon"];
+//        }
+        CGRect hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
+        hotZoneCircle = CGRectMake(pos.x - (newEventHorizon/2), pos.y - (newEventHorizon/2), newEventHorizon, newEventHorizon);
+        newShape.path = [UIBezierPath bezierPathWithOvalInRect:hotZoneCircle].CGPath;
+        newShape.fillColor = nil;
+        newShape.strokeColor = [SKColor colorWithRed:1.0 green:1.0 blue:1.0 alpha:1];
+        newShape.antialiased = NO;
+        newShape.lineWidth = 1;
+        newShape.alpha = 0.5;
+        _eventHorizonShapes[i] = newShape;
+        _blackHoles[i] = newBlackHole;        //i might be able to kill this... or maybe not if the suns actually move. //WAIT NO. i need to update the mutable dir
+    }
+}
+
 
 @end

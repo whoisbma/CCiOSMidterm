@@ -8,6 +8,7 @@
 
 #import "BMAViewController.h"
 #import "BMAMyScene.h"
+#import "BMATitleScene.h"
 
 @implementation BMAViewController
 
@@ -21,7 +22,7 @@
     skView.showsNodeCount = NO;
     
     // Create and configure the scene.
-    SKScene * scene = [BMAMyScene sceneWithSize:skView.bounds.size];
+    SKScene * scene = [BMATitleScene sceneWithSize:skView.bounds.size];
     scene.scaleMode = SKSceneScaleModeAspectFill;
     
     // Present the scene.
