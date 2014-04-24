@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8B360EE11908416500C9CFD9 /* level5.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EE01908416500C9CFD9 /* level5.plist */; };
+		8B360EE31908417E00C9CFD9 /* level6.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EE21908417E00C9CFD9 /* level6.plist */; };
+		8B360EE51908418B00C9CFD9 /* level7.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EE41908418B00C9CFD9 /* level7.plist */; };
+		8B360EE71908419A00C9CFD9 /* level8.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EE61908419A00C9CFD9 /* level8.plist */; };
+		8B360EE91908419F00C9CFD9 /* level9.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EE81908419F00C9CFD9 /* level9.plist */; };
+		8B360EEB190841A500C9CFD9 /* level10.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B360EEA190841A500C9CFD9 /* level10.plist */; };
 		8B463E4D18FDCF4F00C523BC /* level2.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B463E4C18FDCF4F00C523BC /* level2.plist */; };
 		8B463E4F18FDCF8E00C523BC /* level3.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B463E4E18FDCF8E00C523BC /* level3.plist */; };
 		8B463E5118FDCF9800C523BC /* level4.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8B463E5018FDCF9800C523BC /* level4.plist */; };
@@ -57,6 +63,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8B360EE01908416500C9CFD9 /* level5.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level5.plist; sourceTree = "<group>"; };
+		8B360EE21908417E00C9CFD9 /* level6.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level6.plist; sourceTree = "<group>"; };
+		8B360EE41908418B00C9CFD9 /* level7.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level7.plist; sourceTree = "<group>"; };
+		8B360EE61908419A00C9CFD9 /* level8.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level8.plist; sourceTree = "<group>"; };
+		8B360EE81908419F00C9CFD9 /* level9.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level9.plist; sourceTree = "<group>"; };
+		8B360EEA190841A500C9CFD9 /* level10.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level10.plist; sourceTree = "<group>"; };
 		8B463E4C18FDCF4F00C523BC /* level2.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level2.plist; sourceTree = "<group>"; };
 		8B463E4E18FDCF8E00C523BC /* level3.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level3.plist; sourceTree = "<group>"; };
 		8B463E5018FDCF9800C523BC /* level4.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = level4.plist; sourceTree = "<group>"; };
@@ -258,6 +270,12 @@
 				8B463E4C18FDCF4F00C523BC /* level2.plist */,
 				8B463E4E18FDCF8E00C523BC /* level3.plist */,
 				8B463E5018FDCF9800C523BC /* level4.plist */,
+				8B360EE01908416500C9CFD9 /* level5.plist */,
+				8B360EE21908417E00C9CFD9 /* level6.plist */,
+				8B360EE41908418B00C9CFD9 /* level7.plist */,
+				8B360EE61908419A00C9CFD9 /* level8.plist */,
+				8B360EE81908419F00C9CFD9 /* level9.plist */,
+				8B360EEA190841A500C9CFD9 /* level10.plist */,
 			);
 			name = Levels;
 			sourceTree = "<group>";
@@ -339,18 +357,24 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8B360EEB190841A500C9CFD9 /* level10.plist in Resources */,
 				8B463E4D18FDCF4F00C523BC /* level2.plist in Resources */,
 				8B955F6018E79BFA00C85C45 /* moon.png in Resources */,
+				8B360EE71908419A00C9CFD9 /* level8.plist in Resources */,
 				8B955F5A18E79BFA00C85C45 /* alienPlanet2.png in Resources */,
 				8B955F0C18E24E3000C85C45 /* InfoPlist.strings in Resources */,
 				8B955F5B18E79BFA00C85C45 /* asteroid.png in Resources */,
 				8B955F5F18E79BFA00C85C45 /* greenPlanet.png in Resources */,
+				8B360EE51908418B00C9CFD9 /* level7.plist in Resources */,
 				8B955F6318E7A28900C85C45 /* vignette.png in Resources */,
 				8B955F5918E79BFA00C85C45 /* alienPlanet.png in Resources */,
 				8B955F5E18E79BFA00C85C45 /* earthBase.psd in Resources */,
 				8B955F6118E79BFA00C85C45 /* sun.png in Resources */,
 				8B955F1F18E24E3000C85C45 /* Images.xcassets in Resources */,
+				8B360EE11908416500C9CFD9 /* level5.plist in Resources */,
+				8B360EE31908417E00C9CFD9 /* level6.plist in Resources */,
 				8B463E4F18FDCF8E00C523BC /* level3.plist in Resources */,
+				8B360EE91908419F00C9CFD9 /* level9.plist in Resources */,
 				8B463E5118FDCF9800C523BC /* level4.plist in Resources */,
 				8B955F5D18E79BFA00C85C45 /* earth.png in Resources */,
 				8B955F5C18E79BFA00C85C45 /* blueSun.png in Resources */,

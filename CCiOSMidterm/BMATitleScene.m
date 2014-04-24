@@ -90,7 +90,7 @@
          [self titleMessage:@"LET'S GO YOU GUYS" withYPos:140];
     }
     
-    NSLog(@"%i", _titlePhase);
+    //NSLog(@"%i", _titlePhase);
 }
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event

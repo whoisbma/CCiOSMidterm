@@ -52,6 +52,8 @@
 			<string>{150,100} </string>
 			<key>size</key>
 			<string>{32, 32}</string>
+			<key>eventHorizon</key>
+			<string>320</string>
 		</dict>
 	</array>
 </dict>

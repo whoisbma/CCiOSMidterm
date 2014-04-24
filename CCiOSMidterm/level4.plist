@@ -51,34 +51,54 @@
 	<key>colonies</key>
 	<array>
 		<dict>
+			<key>density</key>
+			<string>1.0</string>
 			<key>position</key>
 			<string>{160, 30}</string>
 			<key>size</key>
 			<string>{24, 24}</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 		<dict>
+			<key>density</key>
+			<string>1.0</string>
 			<key>position</key>
 			<string>{30, 240}</string>
 			<key>size</key>
 			<string>{24, 24}</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 		<dict>
+			<key>density</key>
+			<string>1.0</string>
 			<key>position</key>
 			<string>{50, 550}</string>
 			<key>size</key>
 			<string>{16, 16}</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 		<dict>
+			<key>density</key>
+			<string>1.0</string>
 			<key>position</key>
 			<string>{200, 200}</string>
 			<key>size</key>
 			<string>{32, 32}</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 		<dict>
+			<key>density</key>
+			<string>1.0</string>
 			<key>position</key>
 			<string>{100, 320}</string>
 			<key>size</key>
 			<string>{24, 24}</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 	</array>
 </dict>

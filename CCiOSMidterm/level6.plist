@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>levelGoal</key>
+	<string>1800</string>
+	<key>earthProperties</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{170, 300}</string>
+			<key>size</key>
+			<string>{40, 40}</string>
+			<key>density</key>
+			<string>0.5</string>
+		</dict>
+	</array>
+	<key>suns</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{330, -100}</string>
+			<key>size</key>
+			<string>{500, 500}</string>
+		</dict>
+	</array>
+	<key>colonies</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{190, 370}</string>
+			<key>size</key>
+			<string>{16, 16}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{120, 300}</string>
+			<key>size</key>
+			<string>{10, 20}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{125, 360}</string>
+			<key>size</key>
+			<string>{16, 16}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{100, 200}</string>
+			<key>size</key>
+			<string>{20, 20}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{75, 250}</string>
+			<key>size</key>
+			<string>{15, 15}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{90, 290}</string>
+			<key>size</key>
+			<string>{22, 22}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{220, 310}</string>
+			<key>size</key>
+			<string>{17, 17}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{220, 180}</string>
+			<key>size</key>
+			<string>{20, 20}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{257, 193}</string>
+			<key>size</key>
+			<string>{22, 22}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{220, 400}</string>
+			<key>size</key>
+			<string>{13, 13}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

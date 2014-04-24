@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>levelGoal</key>
+	<string>1000</string>
+	<key>earthProperties</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{30, 30}</string>
+			<key>size</key>
+			<string>{32, 32}</string>
+			<key>density</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+	<key>suns</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{25, 280}</string>
+			<key>size</key>
+			<string>{100, 100}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 30}</string>
+			<key>size</key>
+			<string>{200, 200}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 500}</string>
+			<key>size</key>
+			<string>{200, 200}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{300, 280}</string>
+			<key>size</key>
+			<string>{100, 100}</string>
+		</dict>
+	</array>
+	<key>colonies</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{290, 30}</string>
+			<key>size</key>
+			<string>{48, 48}</string>
+			<key>density</key>
+			<string>0.5</string>
+			<key>population</key>
+			<string>320</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{30, 550}</string>
+			<key>size</key>
+			<string>{48, 48}</string>
+			<key>density</key>
+			<string>0.5</string>
+			<key>population</key>
+			<string>100</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{290, 550}</string>
+			<key>size</key>
+			<string>{16, 16}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>160</string>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -22,6 +22,10 @@
 			<string>{50, 180}</string>
 			<key>size</key>
 			<string>{24, 24}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
 		</dict>
 	</array>
 	<key>asteroids</key>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>levelGoal</key>
+	<string>1000</string>
+	<key>earthProperties</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{160, 500}</string>
+			<key>size</key>
+			<string>{28, 28}</string>
+			<key>density</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+	<key>suns</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{60, 100}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 100}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{260, 100}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{60, 250}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 250}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{260, 250}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{60, 400}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 400}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{260, 400}</string>
+			<key>size</key>
+			<string>{55, 55}</string>
+		</dict>
+	</array>
+	<key>colonies</key>
+	<array>
+		<dict>
+			<key>position</key>
+			<string>{205, 175}</string>
+			<key>size</key>
+			<string>{28, 28}</string>
+			<key>density</key>
+			<string>1.0</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{105, 325}</string>
+			<key>size</key>
+			<string>{28, 28}</string>
+			<key>density</key>
+			<string>0.5</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+		<dict>
+			<key>position</key>
+			<string>{160, 450}</string>
+			<key>size</key>
+			<string>{28, 28}</string>
+			<key>density</key>
+			<string>0.6</string>
+			<key>population</key>
+			<string>0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

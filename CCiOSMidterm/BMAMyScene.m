@@ -29,6 +29,12 @@
 
 //bug - sometimes touching a colony changes population to 1 and colony stays at 0 (might be a collision bug, might be something related to removing old nodes from parents?
 
+//still need to add the lose condition related to total POTENTIAL population
+
+//moving always decreases population? pick up stuff to get more?
+//asteroids crash into you and make moons?
+
+//death state is kind of wrong. especially noticeable in the later levels.
 
 #import "BMAMyScene.h"
 #import "Physics.h"
@@ -112,7 +118,7 @@
     _hotZoneShapes3 = [[NSMutableArray alloc]init]; //BLAHHH!..
     _suns = [[NSMutableArray alloc]init];
     
-    _currentLevel = 1;
+    _currentLevel = 9;
     [self setupLevel: _currentLevel];
 }
 
@@ -162,7 +168,7 @@
     //NSLog(@"earth max population = %@", [_shipNode.userData valueForKey:@"maxPopulation"]);
 }
 
-- (void) addColonyPlanetAtPosition:(CGPoint)pos withSize:(CGSize)size
+- (void) addColonyPlanetAtPosition:(CGPoint)pos withSize:(CGSize)size withDensity:(CGFloat)density withStartingPop:(int)pop
 {
     _colonyPlanetNode = [SKSpriteNode spriteNodeWithImageNamed:@"greenPlanet"];
     _colonyPlanetNode.name = @"colonyPlanet";
@@ -172,6 +178,7 @@
     [_gameNode addChild:_colonyPlanetNode];
     
     _colonyPlanetNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:size.width/2];
+    _colonyPlanetNode.physicsBody.density = density;
     _colonyPlanetNode.physicsBody.linearDamping = 0.9;
     _colonyPlanetNode.physicsBody.angularDamping = 0.9;
     _colonyPlanetNode.physicsBody.categoryBitMask = PhysicsCategoryColony;
@@ -179,7 +186,7 @@
 
     _colonyPlanetNode.userData = [[NSMutableDictionary alloc] init];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:size.width*10] forKey:@"maxPopulation"];
-    [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:0] forKey:@"population"];
+    [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:pop] forKey:@"population"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"canControl"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithInt:30] forKey:@"controlReturnCount"];
     [_colonyPlanetNode.userData setObject:[NSNumber numberWithBool:NO] forKey:@"isHot"];
@@ -343,7 +350,7 @@
     _blueSunNode.physicsBody.dynamic = NO;
 }
 
-- (void) addBlackHoleAtPosition:(CGPoint)pos withSize:(CGSize)size
+- (void) addBlackHoleAtPosition:(CGPoint)pos withSize:(CGSize)size withEventHoriz:(CGFloat)eventHorizon
 {
     _blackHoleNode = [SKSpriteNode spriteNodeWithImageNamed:@"alienPlanet"];
     _blackHoleNode.name = @"blackHole";
@@ -353,7 +360,8 @@
     [_blackHoleNode runAction:[SKAction repeatActionForever:action]];
     [_gameNode addChild:_blackHoleNode];
     
-    float eventHoriz = size.width * 10;
+//    float eventHoriz = size.width * 10;
+    float eventHoriz = eventHorizon;
     _blackHoleNode.userData = [[NSMutableDictionary alloc] init];
     [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizonMax"];
     [_blackHoleNode.userData setObject:[NSNumber numberWithInt:eventHoriz] forKey:@"eventHorizon"];
@@ -590,6 +598,19 @@
         }
     }
     
+    _totalPossiblePopulation = 0;
+    [_gameNode enumerateChildNodesWithName:@"earth" usingBlock:^(SKNode *node, BOOL *stop) {
+        _totalPossiblePopulation += [node.userData[@"maxPopulation"] intValue];
+    }];
+    [_gameNode enumerateChildNodesWithName:@"controlColony" usingBlock:^(SKNode *node, BOOL *stop) {
+        _totalPossiblePopulation += [node.userData[@"maxPopulation"] intValue];
+    }];
+    [_gameNode enumerateChildNodesWithName:@"colonyPlanet" usingBlock:^(SKNode *node, BOOL *stop) {
+        _totalPossiblePopulation += [node.userData[@"maxPopulation"] intValue];
+    }];
+    NSLog(@"total possible population = %i", _totalPossiblePopulation);
+    
+    
     // get total population after refreshing it
     _totalPopulation = 0;
     
@@ -632,9 +653,13 @@
     }
     
     //lose-state
-    if ( (_totalPopulation == 0) && (earthLose > 0) && (coloniesLose == coloniesNum) && (_levelOver == NO) ) {
+    if ( ((_totalPopulation == 0) && (earthLose > 0) && (coloniesLose == coloniesNum) && (_levelOver == NO))     ){
+       // | (_totalPossiblePopulation < _levelGoal) ) {
         [self lose];
         _levelOver = YES;
+ //   } else if (_totalPossiblePopulation < _levelGoal) {
+ //       [self loseByPossiblePopulation];
+ //       _levelOver = YES;   //something wrong here............ a weird stutter on level restart. also there's a problem with recognizing game over with colony death(?)
     }
     
 
@@ -702,19 +727,21 @@
         int earthNewPop = [_shipNode.userData[@"population"] intValue];
         earthNewPop -= 20;
         [_shipNode.userData setObject:[NSNumber numberWithInt:earthNewPop] forKey:@"population"];
-        int colonyNewPop = [_shipNode.userData[@"population"] intValue];
+        int colonyNewPop = [_shipNode.userData[@"population"] intValue];   ///initially wanted to adjust contact planet stuff.
         colonyNewPop = 1;
         if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
             contact.bodyA.categoryBitMask = PhysicsCategoryControlColony;
+            colonyNewPop += [contact.bodyA.node.userData[@"population"]intValue];   //HHAAAAXXXX
             NSLog(@"New colony");
             contact.bodyA.node.name = @"controlColony";
             [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
         }
         else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
             contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
+            colonyNewPop += [contact.bodyB.node.userData[@"population"]intValue];        //HHAAAAXXXX
             NSLog(@"New colony");
             contact.bodyB.node.name = @"controlColony";
-            [contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
+            //[contact.bodyB.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
         }
     }
     
@@ -740,13 +767,19 @@
     else if (collision == (PhysicsCategoryControlColony | PhysicsCategoryColony))
     {
         if (contact.bodyA.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            int colonyNewPop = 1;
+            colonyNewPop += [contact.bodyA.node.userData[@"population"]intValue];
             contact.bodyA.categoryBitMask = PhysicsCategoryControlColony;
             contact.bodyA.node.name = @"controlColony";
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
             [contact.bodyA.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
         }
         else if (contact.bodyB.node.physicsBody.categoryBitMask == PhysicsCategoryColony) {
+            int colonyNewPop = 1;
+            colonyNewPop += [contact.bodyA.node.userData[@"population"]intValue];
             contact.bodyB.categoryBitMask = PhysicsCategoryControlColony;
             contact.bodyB.node.name = @"controlColony";
+            [contact.bodyA.node.userData setObject:[NSNumber numberWithInt:colonyNewPop] forKey:@"population"];
             [contact.bodyB.node.userData setObject:[NSNumber numberWithBool:YES] forKey:@"canControl"];
         }
         NSLog(@"New colony");
@@ -839,7 +872,7 @@
 // Needs some subtlety and additional options/messages
 -(void)win
 {
-    if (_currentLevel < 5) {
+    if (_currentLevel < 10) {
         _currentLevel ++;
     }
     else {
@@ -863,6 +896,16 @@
 {
     NSLog(@"lose");
     [self inGameMessage:@"EXTINCT"];
+    [self runAction:
+     [SKAction sequence:
+      @[[SKAction waitForDuration:3.0],
+        [SKAction performSelector:@selector(newGame) onTarget:self]]]];
+}
+
+-(void)loseByPossiblePopulation
+{
+    NSLog(@"lose");
+    [self inGameMessage:@"NOT ENOUGH PLANETS"];
     [self runAction:
      [SKAction sequence:
       @[[SKAction waitForDuration:3.0],
@@ -977,7 +1020,9 @@
     for (NSDictionary *colony in colonies) {
         CGPoint position = CGPointFromString(colony[@"position"]);
         CGSize size = CGSizeFromString(colony[@"size"]);
-        [self addColonyPlanetAtPosition:position withSize:size];
+        CGFloat density = [(colony[@"density"])floatValue];
+        CGFloat startingPop = [(colony[@"population"])floatValue];
+        [self addColonyPlanetAtPosition:position withSize:size withDensity:density withStartingPop:startingPop];
         NSLog(@"addColoniesFromArray");
     }
 }
@@ -988,7 +1033,8 @@
     for (NSDictionary *blackHole in blackHoles) {
         CGPoint position = CGPointFromString(blackHole[@"position"]);
         CGSize size = CGSizeFromString(blackHole[@"size"]);
-        [self addBlackHoleAtPosition:position withSize:size];
+        CGFloat eventHorizon = [(blackHole[@"eventHorizon"]) floatValue ];
+        [self addBlackHoleAtPosition:position withSize:size withEventHoriz:eventHorizon];
         NSLog(@"addBlackHolesFromArray");
     }
 }
