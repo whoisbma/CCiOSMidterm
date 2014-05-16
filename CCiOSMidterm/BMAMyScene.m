@@ -118,7 +118,7 @@
     _hotZoneShapes3 = [[NSMutableArray alloc]init]; //BLAHHH!..
     _suns = [[NSMutableArray alloc]init];
     
-    _currentLevel = 9;
+    _currentLevel = 1;
     [self setupLevel: _currentLevel];
 }
 
@@ -139,7 +139,7 @@
     [_gameNode addChild:_shipNode];
     
     _shipNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:size.width/2 ];
-    _shipNode.physicsBody.linearDamping = 0.9;
+    _shipNode.physicsBody.linearDamping = 0;//0.9;
     _shipNode.physicsBody.angularDamping = 0.9;
     _shipNode.physicsBody.categoryBitMask = PhysicsCategoryShip;
     _shipNode.physicsBody.contactTestBitMask = PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole | PhysicsCategoryAsteroid | PhysicsCategorySun;
@@ -179,7 +179,7 @@
     
     _colonyPlanetNode.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:size.width/2];
     _colonyPlanetNode.physicsBody.density = density;
-    _colonyPlanetNode.physicsBody.linearDamping = 0.9;
+    _colonyPlanetNode.physicsBody.linearDamping = 0;//0.9;
     _colonyPlanetNode.physicsBody.angularDamping = 0.9;
     _colonyPlanetNode.physicsBody.categoryBitMask = PhysicsCategoryColony;
     _colonyPlanetNode.physicsBody.contactTestBitMask = PhysicsCategoryShip | PhysicsCategoryColony | PhysicsCategoryControlColony | PhysicsCategoryBlackHole | PhysicsCategoryAsteroid | PhysicsCategorySun;
@@ -420,8 +420,8 @@
     for (UITouch *touch in touches) {
         CGPoint location = [touch locationInNode:self];
         _releaseLocation = location;
-        _newX = (_releaseLocation.x - _touchLocation.x) * 0.04;//(_swipeCounter * 0.0001);
-        _newY = (_releaseLocation.y - _touchLocation.y) * 0.04;//(_swipeCounter * 0.0001);
+        _newX = (_releaseLocation.x - _touchLocation.x) * 0.02;//(_swipeCounter * 0.0001);
+        _newY = (_releaseLocation.y - _touchLocation.y) * 0.02;//(_swipeCounter * 0.0001);
         
         //______________________________________________________________________________________________________________
         //|                                                                                                            |
